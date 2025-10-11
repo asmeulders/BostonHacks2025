@@ -13,7 +13,6 @@ class MainPopupManager {
     try {
       await this.loadCurrentData();
       this.setupEventListeners();
-      this.updateStatusDisplay();
     } catch (error) {
       PopupUtils.logError('Failed to initialize main popup:', error);
       PopupUtils.showError('Failed to initialize. Please refresh the extension.');
@@ -62,75 +61,6 @@ class MainPopupManager {
         }, 500);
       });
     });
-  }
-
-  async updateStatusDisplay() {
-    const statusDisplay = document.getElementById('currentStatus');
-    if (!statusDisplay) return;
-
-    try {
-      // Get current domain status
-      const currentDomain = this.currentTab ? PopupUtils.extractDomain(this.currentTab.url) : null;
-      const isWorkDomain = currentDomain && this.workDomains.includes(currentDomain);
-      
-      // Get session status
-      const sessionStatus = this.currentSession ? 'Active' : 'None';
-      
-      // Get today's statistics
-      const todayStats = await this.getTodayStatistics();
-      
-      statusDisplay.innerHTML = `
-        <div class="status-grid">
-          <div class="status-item">
-            <span class="status-icon">${isWorkDomain ? '✅' : '⚠️'}</span>
-            <div class="status-info">
-              <div class="status-label">Current Site</div>
-              <div class="status-value">${isWorkDomain ? 'Work Domain' : 'Non-Work'}</div>
-              ${currentDomain ? `<div class="status-detail">${currentDomain}</div>` : ''}
-            </div>
-          </div>
-          
-          <div class="status-item">
-            <span class="status-icon">${this.currentSession ? '🟢' : '⭕'}</span>
-            <div class="status-info">
-              <div class="status-label">Session</div>
-              <div class="status-value">${sessionStatus}</div>
-              ${this.currentSession ? `<div class="status-detail">${PopupUtils.formatTime(this.currentSession.timeRemaining)} left</div>` : ''}
-            </div>
-          </div>
-          
-          <div class="status-item">
-            <span class="status-icon">📊</span>
-            <div class="status-info">
-              <div class="status-label">Today</div>
-              <div class="status-value">${todayStats.sessions} sessions</div>
-              <div class="status-detail">${Math.floor(todayStats.totalTime / 60)} minutes</div>
-            </div>
-          </div>
-          
-          <div class="status-item">
-            <span class="status-icon">🌐</span>
-            <div class="status-info">
-              <div class="status-label">Work Domains</div>
-              <div class="status-value">${this.workDomains.length} sites</div>
-              <div class="status-detail">configured</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Update quick action buttons based on current state
-      this.updateQuickActions(currentDomain, isWorkDomain);
-      
-    } catch (error) {
-      PopupUtils.logError('Failed to update status display:', error);
-      statusDisplay.innerHTML = `
-        <div class="status-error">
-          <span class="status-icon">❌</span>
-          <div>Failed to load status information</div>
-        </div>
-      `;
-    }
   }
 
   updateQuickActions(currentDomain, isWorkDomain) {
