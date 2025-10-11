@@ -97,12 +97,26 @@ class StudySessionManager {
     const startBtn = document.getElementById('startTimer');
     const pauseBtn = document.getElementById('pauseTimer');
     const stopBtn = document.getElementById('stopTimer');
-    const resetBtn = document.getElementById('resetTimer');
+    const resetBtn = document.getElementById('resetTimer');//timer sliders
+    const workSlider = document.getElementById("workRange");
+    const workTime = document.getElementById("work-time");
+    const restSlider = document.getElementById("restRange");
+    const restTime = document.getElementById("rest-time");
+
+    workTime.innerHTML = workSlider.value;
+    restTime.innerHTML = restSlider.value;
+
+    // const { activeSession } = await chrome.storage.local.get('activeSession');
+    //let active = activeSession ?? false; // fallback if undefined
+
+    //sessionButton.textContent = active ? "End Work" : "Start Work";
 
     if (startBtn) startBtn.addEventListener('click', () => this.startTimer());
     if (pauseBtn) pauseBtn.addEventListener('click', () => this.pauseTimer());
     if (stopBtn) stopBtn.addEventListener('click', () => this.stopTimer());
     if (resetBtn) resetBtn.addEventListener('click', () => this.resetTimer());
+    if (workSlider) workSlider.addEventListener('input', (event) => {workTime.innerHTML = event.target.value;});
+    if (restSlider) restSlider.addEventListener('input', (event) => {restTime.innerHTML = event.target.value;});
 
     // Custom time inputs
     const timeInputs = document.querySelectorAll('.time-input');
@@ -194,7 +208,6 @@ class StudySessionManager {
     // Update progress ring if present
     this.updateProgressRing();
   }
-
   updateProgressRing() {
     const progressRing = document.querySelector('.progress-ring-progress');
     const progressText = document.querySelector('.progress-ring-text');
@@ -665,3 +678,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access
 window.studySessionManager = studySessionManager;
+
