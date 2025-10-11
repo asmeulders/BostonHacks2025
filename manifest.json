@@ -3,6 +3,9 @@
   "description": "Chrome extension to reduce distractions by managing work tabs and prompting users when switching to non-work tabs",
   "version": "1.0",
   "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "images/hello_extensions.png"
@@ -25,5 +28,12 @@
   "host_permissions": [
     "<all_urls>"
   ]
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+B",
+        "mac": "Command+B"
+      }
+    }
+  }
 }
-

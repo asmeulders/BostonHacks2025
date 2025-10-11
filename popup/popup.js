@@ -1,5 +1,4 @@
 // BARE BONES TESTING INTERFACE
-// Your teammate can replace this with proper UI
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Testing interface loaded');

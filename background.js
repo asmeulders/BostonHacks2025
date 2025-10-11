@@ -1,5 +1,4 @@
 // Study Focus Assistant - Background Script
-// Manages tab switching detection and work tab classification
 
 class StudyFocusManager {
   constructor() {
