@@ -1,10 +1,23 @@
 {
-  "name": "Hello Extensions of the world!",
-  "description": "Base Level Extension",
-  "version": "1.0",
   "manifest_version": 3,
+  "name": "Four Buttons Starter",
+  "version": "1.0.0",
+  "description": "Pop up with 4 buttons",
   "action": {
-    "default_popup": "popup/popup.html",
-    "default_icon": "images/hello_extensions.png"
+    "default_title": "Four Buttons",
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": [
+    "notifications",
+    "scripting",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icons/icon128.png",
+    "48": "icons/icon128.png"
   }
+
 }
