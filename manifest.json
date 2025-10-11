@@ -1,10 +1,29 @@
 {
-  "name": "Hello Extensions of the world!",
-  "description": "Base Level Extension",
+  "name": "Study Focus Assistant",
+  "description": "Chrome extension to reduce distractions by managing work tabs and prompting users when switching to non-work tabs",
   "version": "1.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "images/hello_extensions.png"
-  }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
 }
+
