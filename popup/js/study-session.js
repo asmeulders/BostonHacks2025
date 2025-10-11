@@ -28,7 +28,6 @@ class StudySessionManager {
       await this.loadSessionData();
       this.setupEventListeners();
       this.updateUI();
-      this.loadTodaysProgress();
     } catch (error) {
       PopupUtils.logError('Failed to initialize study session manager:', error);
       PopupUtils.showError('Failed to initialize. Please refresh the page.');
