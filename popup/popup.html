@@ -1,6 +1,58 @@
+<!DOCTYPE html>
 <html>
-  <body>
-    <h1>Hello Extensions</h1>
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      margin: 5px 0;
+      padding: 5px 10px;
+      width: 100%;
+    }
+    input {
+      width: 100%;
+      padding: 5px;
+      margin: 5px 0;
+    }
+    .test-section {
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Study Focus - TESTING</h3>
+  
+  <div class="test-section">
+    <h4>Current Tab:</h4>
+    <div id="currentTab"></div>
+  </div>
+  
+  <div class="test-section">
+    <h4>Quick Actions:</h4>
+    <button id="addCurrentDomain">Add Current Site as Work</button>
+    <button id="testTrigger">Trigger Test Popup</button>
+  </div>
+  
+  <div class="test-section">
+    <h4>Manual Add:</h4>
+    <input type="text" id="domainInput" placeholder="domain.com" />
+    <button id="manualAdd">Add Domain</button>
+  </div>
+  
+  <div class="test-section">
+    <h4>Work Domains:</h4>
+    <div id="workDomains"></div>
+    <button id="clearAll">Clear All Domains</button>
+  </div>
+  
+  <div id="message"></div>
+  
+  <script src="popup.js"></script>
+</body>
 </html>
