@@ -10,9 +10,6 @@
     "default_popup": "popup/popup.html",
     "default_icon": "images/hello_extensions.png"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
   "content_scripts": [
     {
       "js": ["content.js"],
@@ -27,7 +24,7 @@
   ],
   "host_permissions": [
     "<all_urls>"
-  ]
+  ],
   "commands": {
     "_execute_action": {
       "suggested_key": {
