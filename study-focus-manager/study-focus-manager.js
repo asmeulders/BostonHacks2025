@@ -49,11 +49,23 @@ export class StudyFocusManager {
     try {
       const tab = await chrome.tabs.get(tabId);
 
-      const { activeSession } = await chrome.storage.local.get('activeSession');
+      // Check if extension is enabled
+      const { extensionEnabled, activeSession } = await chrome.storage.local.get(['extensionEnabled', 'activeSession']);
       
-      if (!activeSession || !tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-        console.log('Skipping chrome internal page:', tab.url);
-        return; // Skip chrome internal pages
+      // Skip if extension is disabled or if it's a chrome internal page
+      if (extensionEnabled === false || !tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+        if (extensionEnabled === false) {
+          console.log('Extension is disabled, skipping tab switch handling');
+        } else {
+          console.log('Skipping chrome internal page:', tab.url);
+        }
+        return;
+      }
+
+      // Only show distraction prompts if there's an active session
+      if (!activeSession) {
+        console.log('No active session, skipping distraction check for:', tab.url);
+        return;
       }
 
       const domain = this.extractDomain(tab.url);
@@ -146,6 +158,21 @@ export class StudyFocusManager {
           console.error('Error going back:', error);
           sendResponse({ success: false, error: error.message });
         }
+        break;
+
+      case 'extensionToggled':
+        console.log('Extension toggled:', message.enabled ? 'enabled' : 'disabled');
+        sendResponse({ success: true });
+        break;
+
+      case 'SESSION_STARTED':
+        console.log('Session started:', message.sessionType, message.duration);
+        sendResponse({ success: true });
+        break;
+
+      case 'SESSION_ENDED':
+        console.log('Session ended');
+        sendResponse({ success: true });
         break;
 
       default:
