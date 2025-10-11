@@ -52,9 +52,20 @@ function setupTestListeners() {
     const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (currentTab) {
       const domain = extractDomain(currentTab.url);
+      // Inject the distraction alert script first
       await chrome.scripting.executeScript({
         target: { tabId: currentTab.id },
-        func: showTestPopup,
+        files: ['distraction-alert/distraction-popup.js']
+      });
+      
+      // Then call the function
+      await chrome.scripting.executeScript({
+        target: { tabId: currentTab.id },
+        func: (domain) => {
+          if (typeof showDistractionAlert === 'function') {
+            showDistractionAlert(domain);
+          }
+        },
         args: [domain]
       });
       showMessage('Test popup triggered!');
