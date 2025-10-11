@@ -17,13 +17,13 @@
 - `domain-utils.js` - Common domain extraction and validation functions
 
 ### Root Files
-- `background.js` - Main service worker for tab management and coordination
+- `service-worker.js` - Main service worker for tab management and coordination
 - `content.js` - Legacy content script (can be removed)
 - `manifest.json` - Extension configuration
 
 ## How It Works
 
-1. **Background Script** (`background.js`) monitors tab switches
+1. **Background Script** (`service-worker.js`) monitors tab switches
 2. **Distraction Alert** (`distraction-alert/`) shows popup when switching to non-work tabs
 3. **Main Popup** (`popup/`) provides interface for managing work domains
 4. **Shared Utils** (`shared/`) contains common functionality used across components
@@ -33,4 +33,4 @@
 The frontend components are clearly separated:
 - Main UI: `/popup/` folder
 - Distraction alerts: `/distraction-alert/` folder  
-- Backend logic: `background.js`
+- Backend logic: `service-worker.js`

@@ -1,11 +1,11 @@
 // BARE BONES TESTING INTERFACE
-
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Testing interface loaded');
   await loadTestInterface();
   setupTestListeners();
 });
 
+//timer sliders
 var workSlider = document.getElementById("workRange");
 var workTime = document.getElementById("work-time");
 workTime.innerHTML = workSlider.value;
@@ -14,12 +14,29 @@ workSlider.addEventListener('input', (event) => {
     workTime.innerHTML = event.target.value;
 });
 
-var restSlider = document.getElementById("restRange");
-var restTime = document.getElementById("rest-time");
+let restSlider = document.getElementById("restRange");
+let restTime = document.getElementById("rest-time");
 restTime.innerHTML = restSlider.value;
 
 restSlider.addEventListener('input', (event) => {
     restTime.innerHTML = event.target.value;
+});
+
+
+const sessionButton = document.getElementById("session-button");
+
+// Correct destructuring
+const { activeSession } = await chrome.storage.local.get('activeSession');
+let active = activeSession ?? false; // fallback if undefined
+
+// Initialize button label
+sessionButton.textContent = active ? "End Work" : "Start Work";
+
+sessionButton.addEventListener('click', async () => {
+  active = !active;
+  sessionButton.textContent = active ? "End Work" : "Start Work";
+  await chrome.storage.local.set({ activeSession: active });
+  console.log("Session state:", active);
 });
 
 async function loadTestInterface() {
@@ -30,6 +47,7 @@ async function loadTestInterface() {
     document.getElementById('currentTab').innerHTML = `<strong>${domain}</strong>`;
     document.getElementById('addCurrentDomain').setAttribute('data-domain', domain);
   }
+}
 
   // Show work domains
   const response = await chrome.runtime.sendMessage({ action: 'getWorkDomains' });
@@ -41,7 +59,6 @@ async function loadTestInterface() {
       `).join('');
     document.getElementById('workDomains').innerHTML = domainsHtml;
   }
-}
 
 function setupTestListeners() {
   // Add current domain

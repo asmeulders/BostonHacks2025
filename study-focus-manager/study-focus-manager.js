@@ -1,6 +1,6 @@
 // Study Focus Assistant - Background Script
 
-class StudyFocusManager {
+export class StudyFocusManager {
   constructor() {
     this.workDomains = new Set();
     this.lastActiveTabId = null;
@@ -39,11 +39,19 @@ class StudyFocusManager {
     });
   }
 
+//   toggleSession() {
+//     this.activeSession = !this.activeSession;
+//     console.log(`Session active: ${this.activeSession}`)
+//     return 
+//   }
+
   async handleTabSwitch(tabId) {
     try {
       const tab = await chrome.tabs.get(tabId);
+
+      const { activeSession } = await chrome.storage.local.get('activeSession');
       
-      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+      if (!activeSession || !tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
         console.log('Skipping chrome internal page:', tab.url);
         return; // Skip chrome internal pages
       }
@@ -192,6 +200,3 @@ class StudyFocusManager {
     }
   }
 }
-
-// Initialize the Study Focus Manager
-const studyFocusManager = new StudyFocusManager();
