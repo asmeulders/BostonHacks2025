@@ -1,35 +1,68 @@
-// Study Focus Assistant - Background Script
+// Study Focus Assistant - Background Script (Lockdown on Focused Mode)
 
 class StudyFocusManager {
   constructor() {
     this.workDomains = new Set();
     this.lastActiveTabId = null;
+
+    // live-in-memory mirrors of storage
+    this.mode = 'normal';
+    this.interceptEnabled = true;
+    this.sessionActive = false;
+    this.phase = 'IDLE';
+
     this.init();
   }
 
   async init() {
-    // Load existing work domains from storage
+    // Load persisted domain list
     await this.loadWorkDomains();
-    
-    // Set up event listeners
+
+    // Load mode/intercept/session defaults
+    const s = await chrome.storage.local.get(['mode', 'interceptEnabled', 'sessionActive', 'phase']);
+    this.mode = s.mode || 'normal';
+    this.interceptEnabled = s.interceptEnabled !== false; // default true
+    this.sessionActive = !!s.sessionActive;
+    this.phase = s.phase || 'IDLE';
+
     this.setupEventListeners();
-    
-    console.log('Study Focus Assistant initialized');
+
+    // If we start up already in focused mode, establish a baseline work domain
+    if (this.mode === 'focused') {
+      await this.addCurrentActiveDomainAsWork();
+    }
+
+    console.log('Study Focus Assistant initialized (mode:', this.mode, ', intercept:', this.interceptEnabled, ')');
   }
 
   setupEventListeners() {
     // Listen for tab activation (switching)
     chrome.tabs.onActivated.addListener(async (activeInfo) => {
-      console.log('Tab activated:', activeInfo.tabId);
-      await this.handleTabSwitch(activeInfo.tabId);
+      try {
+        await this.handleTabSwitch(activeInfo.tabId);
+      } catch (e) {
+        console.warn('onActivated error', e);
+      }
     });
 
     // Listen for tab updates (URL changes)
     chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       if (changeInfo.status === 'complete' && tab.active) {
-        console.log('Tab updated and active:', tabId, tab.url);
-        await this.handleTabSwitch(tabId);
+        try {
+          await this.handleTabSwitch(tabId);
+        } catch (e) {
+          console.warn('onUpdated error', e);
+        }
       }
+    });
+
+    // Keep in-memory mirrors in sync with storage
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local') return;
+      if ('mode' in changes) this.mode = changes.mode.newValue ?? 'normal';
+      if ('interceptEnabled' in changes) this.interceptEnabled = changes.interceptEnabled.newValue !== false;
+      if ('sessionActive' in changes) this.sessionActive = !!changes.sessionActive.newValue;
+      if ('phase' in changes) this.phase = changes.phase.newValue ?? 'IDLE';
     });
 
     // Listen for messages from content script and popup
@@ -40,30 +73,21 @@ class StudyFocusManager {
   }
 
   async handleTabSwitch(tabId) {
+    // Lockdown rule: only prompt when intercept is on AND mode is focused
+    if (!(this.interceptEnabled && this.mode === 'focused')) return;
+
     try {
       const tab = await chrome.tabs.get(tabId);
-      
-      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-        console.log('Skipping chrome internal page:', tab.url);
-        return; // Skip chrome internal pages
-      }
+      if (!tab?.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) return;
 
       const domain = this.extractDomain(tab.url);
       const isWorkTab = this.isWorkDomain(domain);
 
-      console.log(`Tab switch detected - Domain: ${domain}, Is Work Tab: ${isWorkTab}, Work Domains:`, Array.from(this.workDomains));
-
-      // Store the current tab info
       this.lastActiveTabId = tabId;
 
       if (!isWorkTab) {
-        console.log(`Showing distraction prompt for non-work domain: ${domain}`);
-        // This is a non-work tab, show distraction prompt
         await this.showDistractionPrompt(tabId, domain);
-      } else {
-        console.log(`${domain} is a work domain, no prompt needed`);
       }
-
     } catch (error) {
       console.error('Error handling tab switch:', error);
     }
@@ -71,85 +95,172 @@ class StudyFocusManager {
 
   async showDistractionPrompt(tabId, domain) {
     try {
-      console.log(`Attempting to inject script into tab ${tabId} for domain ${domain}`);
-      
-      // Wait a moment for the page to be ready
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Inject the distraction alert script into the current tab
-      await chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ['distraction-alert/distraction-popup.js']
+      // allow page to settle a bit
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Prefer messaging a content script overlay if you have one registered
+      await chrome.tabs.sendMessage(tabId, {
+        action: 'showDistractionAlert',
+        domain
       });
-      
-      // Then call the function
-      await chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: (domain) => {
-          if (typeof showDistractionAlert === 'function') {
-            showDistractionAlert(domain);
-          }
-        },
-        args: [domain]
-      });
-      
-      console.log(`Successfully injected distraction prompt for ${domain}`);
-    } catch (error) {
-      console.error('Error showing distraction prompt:', error);
-      
-      // Fallback: try to use content script messaging
+    } catch (fallbackError) {
+      // Fallback: attempt to inject a legacy popup script if present
       try {
-        await chrome.tabs.sendMessage(tabId, {
-          action: 'showDistractionAlert',
-          domain: domain
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ['distraction-alert/distraction-popup.js']
         });
-        console.log('Fallback: sent message to content script');
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          func: (d) => { if (typeof showDistractionAlert === 'function') showDistractionAlert(d); },
+          args: [domain]
+        });
+      } catch (err) {
+        console.error('Failed to show distraction prompt:', err);
       }
     }
   }
 
   async handleMessage(message, sender, sendResponse) {
-    switch (message.action) {
-      case 'addWorkDomain':
+    const kind = message.type || message.action; // support either shape
+
+    switch (kind) {
+      /* ---------- Mode & Intercept ---------- */
+      case 'TOGGLE_MODE': {
+        const mode = message.mode === 'focused' ? 'focused' : 'normal';
+        await chrome.storage.local.set({ mode });
+        this.mode = mode;
+
+        if (mode === 'focused') {
+          // Lockdown baseline: current active tab's DOMAIN becomes work
+          await this.addCurrentActiveDomainAsWork();
+          // Ensure intercept is ON for lockdown to function
+          await chrome.storage.local.set({ interceptEnabled: true });
+          this.interceptEnabled = true;
+        }
+
+        sendResponse?.({ success: true });
+        return;
+      }
+
+      case 'SET_INTERCEPT': {
+        const interceptEnabled = !!message.enabled;
+        await chrome.storage.local.set({ interceptEnabled });
+        this.interceptEnabled = interceptEnabled;
+        sendResponse?.({ success: true });
+        return;
+      }
+
+      /* ---------- Minimal Session Controls (optional) ---------- */
+      case 'START_SESSION': {
+        await chrome.storage.local.set({
+          sessionActive: true,
+          phase: 'FOCUS',
+          mode: 'focused'
+        });
+        this.sessionActive = true;
+        this.phase = 'FOCUS';
+        this.mode = 'focused';
+        // Lockdown baseline on start as well
+        await this.addCurrentActiveDomainAsWork();
+        // Make sure intercept is on
+        await chrome.storage.local.set({ interceptEnabled: true });
+        this.interceptEnabled = true;
+
+        sendResponse?.({ success: true });
+        return;
+      }
+
+      case 'STOP_SESSION': {
+        await chrome.storage.local.set({
+          sessionActive: false,
+          phase: 'IDLE'
+        });
+        this.sessionActive = false;
+        this.phase = 'IDLE';
+        sendResponse?.({ success: true });
+        return;
+      }
+
+      /* ---------- Optional: GET_STATE for popup ---------- */
+      case 'GET_STATE': {
+        const state = await chrome.storage.local.get([
+          'mode',
+          'interceptEnabled',
+          'sessionActive',
+          'phase'
+        ]);
+        sendResponse?.({
+          mode: state.mode ?? 'normal',
+          interceptEnabled: state.interceptEnabled !== false,
+          sessionActive: state.sessionActive ?? false,
+          phase: state.phase ?? 'IDLE'
+        });
+        return;
+      }
+
+      /* ---------- Legacy domain management (kept) ---------- */
+      case 'addWorkDomain': {
         await this.addWorkDomain(message.domain);
-        sendResponse({ success: true });
-        break;
+        sendResponse?.({ success: true });
+        return;
+      }
 
-      case 'removeWorkDomain':
+      case 'removeWorkDomain': {
         await this.removeWorkDomain(message.domain);
-        sendResponse({ success: true });
-        break;
+        sendResponse?.({ success: true });
+        return;
+      }
 
-      case 'getWorkDomains':
-        sendResponse({ domains: Array.from(this.workDomains) });
-        break;
+      case 'getWorkDomains': {
+        sendResponse?.({ domains: Array.from(this.workDomains) });
+        return;
+      }
 
-      case 'goBack':
-        // Go back in history
+      case 'goBack': {
         try {
           await chrome.scripting.executeScript({
-            target: { tabId: sender.tab.id },
+            target: { tabId: sender?.tab?.id },
             func: () => window.history.back()
           });
-          sendResponse({ success: true });
+          sendResponse?.({ success: true });
         } catch (error) {
-          console.error('Error going back:', error);
-          sendResponse({ success: false, error: error.message });
+          sendResponse?.({ success: false, error: error?.message || String(error) });
         }
-        break;
+        return;
+      }
 
       default:
-        sendResponse({ success: false, error: 'Unknown action' });
+        sendResponse?.({ success: false, error: 'Unknown action' });
     }
   }
 
+  /* ---------- Lockdown helper: add active tab's DOMAIN as work ---------- */
+  async addCurrentActiveDomainAsWork() {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.url) return;
+      if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) return;
+
+      const domain = this.extractDomain(tab.url);
+      if (!domain) return;
+
+      this.workDomains.add(domain);
+      await this.saveWorkDomains();
+      this.lastActiveTabId = tab.id;
+
+      console.log(`[Lockdown] Baseline work domain set: ${domain} (tab ${tab.id})`);
+    } catch (e) {
+      console.warn('Failed to set baseline work domain:', e);
+    }
+  }
+
+  /* ---------- Utilities & domain persistence ---------- */
   extractDomain(url) {
     try {
       const urlObj = new URL(url);
       return urlObj.hostname;
-    } catch (error) {
+    } catch {
       return url;
     }
   }
@@ -159,12 +270,14 @@ class StudyFocusManager {
   }
 
   async addWorkDomain(domain) {
+    if (!domain) return;
     this.workDomains.add(domain);
     await this.saveWorkDomains();
     console.log(`Added work domain: ${domain}`);
   }
 
   async removeWorkDomain(domain) {
+    if (!domain) return;
     this.workDomains.delete(domain);
     await this.saveWorkDomains();
     console.log(`Removed work domain: ${domain}`);

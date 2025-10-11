@@ -1,163 +1,204 @@
-// BARE BONES TESTING INTERFACE
+// Study Focus Assistant — Popup UI
 
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Testing interface loaded');
-  await loadTestInterface();
-  setupTestListeners();
-});
+/* ---------------- Element helpers ---------------- */
+const $ = (sel) => document.querySelector(sel);
+const on = (sel, evt, fn) => { const el = $(sel); if (el) el.addEventListener(evt, fn); };
 
-var workSlider = document.getElementById("workRange");
-var workTime = document.getElementById("work-time");
-workTime.innerHTML = workSlider.value;
-
-workSlider.addEventListener('input', (event) => {
-    workTime.innerHTML = event.target.value;
-});
-
-var restSlider = document.getElementById("restRange");
-var restTime = document.getElementById("rest-time");
-restTime.innerHTML = restSlider.value;
-
-restSlider.addEventListener('input', (event) => {
-    restTime.innerHTML = event.target.value;
-});
-
-async function loadTestInterface() {
-  // Show current tab
-  const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (currentTab && currentTab.url) {
-    const domain = extractDomain(currentTab.url);
-    document.getElementById('currentTab').innerHTML = `<strong>${domain}</strong>`;
-    document.getElementById('addCurrentDomain').setAttribute('data-domain', domain);
-  }
-
-  // Show work domains
-  const response = await chrome.runtime.sendMessage({ action: 'getWorkDomains' });
-  if (response && response.domains) {
-    const domainsHtml = response.domains.length === 0 ? 
-      '<em>None yet</em>' : 
-      response.domains.map(domain => `
-        <div>${domain} <button onclick="removeDomain('${domain}')">X</button></div>
-      `).join('');
-    document.getElementById('workDomains').innerHTML = domainsHtml;
-  }
-}
-
-function setupTestListeners() {
-  // Add current domain
-  document.getElementById('addCurrentDomain').addEventListener('click', async () => {
-    const domain = document.getElementById('addCurrentDomain').getAttribute('data-domain');
-    await addDomain(domain);
-    showMessage(`Added: ${domain}`);
-    await loadTestInterface();
-  });
-
-  // Manual add
-  document.getElementById('manualAdd').addEventListener('click', async () => {
-    const domain = document.getElementById('domainInput').value.trim();
-    if (domain) {
-      await addDomain(domain);
-      document.getElementById('domainInput').value = '';
-      showMessage(`Added: ${domain}`);
-      await loadTestInterface();
-    }
-  });
-
-  // Test trigger (force show popup on current tab)
-  document.getElementById('testTrigger').addEventListener('click', async () => {
-    const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (currentTab) {
-      const domain = extractDomain(currentTab.url);
-      // Inject the distraction alert script first
-      await chrome.scripting.executeScript({
-        target: { tabId: currentTab.id },
-        files: ['distraction-alert/distraction-popup.js']
-      });
-      
-      // Then call the function
-      await chrome.scripting.executeScript({
-        target: { tabId: currentTab.id },
-        func: (domain) => {
-          if (typeof showDistractionAlert === 'function') {
-            showDistractionAlert(domain);
-          }
-        },
-        args: [domain]
-      });
-      showMessage('Test popup triggered!');
-    }
-  });
-
-  // Clear all
-  document.getElementById('clearAll').addEventListener('click', async () => {
-    const response = await chrome.runtime.sendMessage({ action: 'getWorkDomains' });
-    if (response && response.domains) {
-      for (const domain of response.domains) {
-        await chrome.runtime.sendMessage({ action: 'removeWorkDomain', domain });
-      }
-    }
-    showMessage('Cleared all domains');
-    await loadTestInterface();
-  });
-}
-
-// Test popup function
-function showTestPopup(domain) {
-  if (document.getElementById('study-focus-overlay')) return;
-
-  const overlay = document.createElement('div');
-  overlay.id = 'study-focus-overlay';
-  overlay.innerHTML = `
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 999999; display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif;">
-      <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center;">
-        <h2>⚠️ TEST POPUP</h2>
-        <p>Domain: <strong>${domain}</strong><br>Is this work-related?</p>
-        <button id="study-focus-yes" style="background: green; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px;">YES - Add as Work</button>
-        <button id="study-focus-no" style="background: red; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px;">NO - Go Back</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  document.getElementById('study-focus-yes').addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'addWorkDomain', domain });
-    overlay.remove();
-  });
-
-  document.getElementById('study-focus-no').addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'goBack' });
-    overlay.remove();
-  });
-
-  setTimeout(() => overlay.remove(), 8000);
-}
-
-async function addDomain(domain) {
-  await chrome.runtime.sendMessage({ action: 'addWorkDomain', domain });
-}
-
-async function removeDomain(domain) {
-  await chrome.runtime.sendMessage({ action: 'removeWorkDomain', domain });
-  await loadTestInterface();
-  showMessage(`Removed: ${domain}`);
-}
-
+function formatHost(url) { try { return new URL(url).hostname; } catch { return url; } }
 function showMessage(text) {
-  const msg = document.getElementById('message');
+  const msg = $('#message');
+  if (!msg) return;
   msg.textContent = text;
   msg.style.background = '#e7f5e7';
   msg.style.padding = '5px';
   msg.style.margin = '5px 0';
-  setTimeout(() => msg.textContent = '', 2000);
+  setTimeout(() => (msg.textContent = ''), 1800);
 }
 
-function extractDomain(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
+/* ---------------- Background comms ---------------- */
+async function sendMsg(payload) {
+  try { return await chrome.runtime.sendMessage(payload); }
+  catch (e) { console.warn('BG not reachable:', e); return null; }
+}
+
+async function getState() {
+  try { return await sendMsg({ type: 'GET_STATE' }); }
+  catch { return null; }
+}
+
+/* ---------------- Status rendering ---------------- */
+function setStatus(text) {
+  const el = $('#sessionStatus');
+  if (el) el.textContent = text;
+}
+
+async function refreshStatus() {
+  const s = await getState();
+  if (!s) { setStatus('Background not ready'); return; }
+  const txt = s.sessionActive ? (s.phase || 'FOCUS') : 'IDLE';
+  setStatus(txt);
+}
+
+/* ---------------- Sliders (existing UI) ---------------- */
+function initSliders() {
+  const workSlider = $('#workRange');
+  const workTime = $('#work-time');
+  if (workSlider && workTime) {
+    workTime.textContent = workSlider.value;
+    workSlider.addEventListener('input', (e) => workTime.textContent = e.target.value);
+  }
+
+  const restSlider = $('#restRange');
+  const restTime = $('#rest-time');
+  if (restSlider && restTime) {
+    restTime.textContent = restSlider.value;
+    restSlider.addEventListener('input', (e) => restTime.textContent = e.target.value);
   }
 }
 
+/* ---------------- Current tab + domain list (existing UI) ---------------- */
+async function loadCurrentTab() {
+  const cur = $('#currentTab');
+  if (!cur) return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url) cur.innerHTML = `<strong>${formatHost(tab.url)}</strong>`;
+}
 
+async function loadWorkDomains() {
+  const box = $('#workDomains');
+  if (!box) return;
+  const res = await sendMsg({ action: 'getWorkDomains' });
+  const domains = res?.domains || [];
+  if (domains.length === 0) {
+    box.innerHTML = '<em>None yet</em>';
+    return;
+  }
+  box.innerHTML = domains.map(d =>
+    `<div>${d} <button data-remove="${d}">X</button></div>`
+  ).join('');
+  box.querySelectorAll('button[data-remove]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await sendMsg({ action: 'removeWorkDomain', domain: btn.getAttribute('data-remove') });
+      await loadWorkDomains();
+      showMessage('Removed');
+    });
+  });
+}
+
+/* ---------------- Mode & Intercept controls ---------------- */
+async function initializeModeControls() {
+  const modeEl = $('#modeSelect');
+  const interceptEl = $('#interceptToggle');
+  if (!modeEl || !interceptEl) return;
+
+  // Load initial values from storage; default mode=normal, intercept=true
+  try {
+    const { mode, interceptEnabled } = await chrome.storage.local.get(['mode', 'interceptEnabled']);
+    modeEl.value = mode ?? 'normal';
+    interceptEl.checked = interceptEnabled !== false;
+  } catch (e) {
+    modeEl.value = 'normal';
+    interceptEl.checked = true;
+  }
+
+  // When selecting Focused, background will set lockdown baseline (current tab's domain)
+  modeEl.addEventListener('change', async (e) => {
+    const newMode = e.target.value;
+    const res = await sendMsg({ type: 'TOGGLE_MODE', mode: newMode });
+    if (res?.success) showMessage(`Mode: ${newMode}`);
+    await refreshStatus();
+  });
+
+  // Toggle intercept
+  interceptEl.addEventListener('change', async (e) => {
+    const enabled = e.target.checked;
+    const res = await sendMsg({ type: 'SET_INTERCEPT', enabled });
+    if (res?.success) showMessage(`Tab prompts ${enabled ? 'enabled' : 'disabled'}`);
+  });
+}
+
+/* ---------------- Start / Stop buttons ---------------- */
+function initSessionButtons() {
+  on('#startSession', 'click', async () => {
+    const res = await sendMsg({ type: 'START_SESSION' });
+    if (res?.success) showMessage('Session started');
+    await refreshStatus();
+  });
+
+  on('#stopSession', 'click', async () => {
+    const res = await sendMsg({ type: 'STOP_SESSION' });
+    if (res?.success) showMessage('Session stopped');
+    await refreshStatus();
+  });
+
+  // Keep status in sync if background changes elsewhere
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    if (changes.sessionActive || changes.phase) refreshStatus();
+  });
+}
+
+/* ---------------- Existing quick actions ---------------- */
+function initQuickActions() {
+  on('#addCurrentDomain', 'click', async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url) return;
+    const domain = formatHost(tab.url);
+    await sendMsg({ action: 'addWorkDomain', domain });
+    await loadWorkDomains();
+    showMessage(`Added: ${domain}`);
+  });
+
+  on('#manualAdd', 'click', async () => {
+    const input = $('#domainInput');
+    if (!input) return;
+    const domain = input.value.trim();
+    if (!domain) return;
+    await sendMsg({ action: 'addWorkDomain', domain });
+    input.value = '';
+    await loadWorkDomains();
+    showMessage(`Added: ${domain}`);
+  });
+
+  on('#testTrigger', 'click', async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+    // Try messaging content script first (if present)
+    try {
+      await chrome.tabs.sendMessage(tab.id, { action: 'showDistractionAlert', domain: formatHost(tab.url) });
+      showMessage('Test overlay triggered');
+    } catch {
+      // fallback: legacy injection if you still use it
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['distraction-alert/distraction-popup.js'] });
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: (d) => { if (typeof showDistractionAlert === 'function') showDistractionAlert(d); },
+          args: [formatHost(tab.url)]
+        });
+        showMessage('Test popup triggered!');
+      } catch (e) {
+        showMessage('Failed to trigger test popup');
+        console.warn(e);
+      }
+    }
+  });
+
+  on('#clearAll', 'click', async () => {
+    const res = await sendMsg({ action: 'getWorkDomains' });
+    const domains = res?.domains || [];
+    for (const d of domains) await sendMsg({ action: 'removeWorkDomain', domain: d });
+    await loadWorkDomains();
+    showMessage('Cleared all domains');
+  });
+}
+
+/* ---------------- Boot ---------------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  initSliders();
+  await loadCurrentTab();
+  await loadWorkDomains();
+  await initializeModeControls();
+  initSessionButtons();
+  await refreshStatus();
+});

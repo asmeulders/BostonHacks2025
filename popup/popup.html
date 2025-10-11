@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <style>
@@ -8,16 +9,21 @@
       padding: 10px;
       font-family: Arial, sans-serif;
     }
+
     button {
       margin: 5px 0;
       padding: 5px 10px;
       width: 100%;
     }
-    input {
+
+    input,
+    select {
       width: 100%;
       padding: 5px;
       margin: 5px 0;
+      box-sizing: border-box;
     }
+
     .test-section {
       border: 1px solid #ccc;
       margin: 10px 0;
@@ -25,20 +31,45 @@
     }
   </style>
 </head>
+
 <body>
   <h3>Study Focus - TESTING</h3>
-  
+
+  <!-- Focus Controls -->
+  <div class="test-section">
+    <h4>Focus Controls</h4>
+
+    <label>Mode:
+      <select id="modeSelect" style="width:100%;margin-top:4px;">
+        <option value="normal">Normal</option>
+        <option value="focused">Focused</option>
+      </select>
+    </label>
+
+    <label style="display:block;margin-top:8px;">
+      <input type="checkbox" id="interceptToggle" checked>
+      Show tab prompts when switching (intercept)
+    </label>
+
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button id="startSession">Start Session</button>
+      <button id="stopSession">Stop Session</button>
+    </div>
+
+    <p id="sessionStatus" style="margin-top:8px;opacity:.85;">IDLE</p>
+  </div>
+
   <div class="test-section">
     <h4>Current Tab:</h4>
     <div id="currentTab"></div>
   </div>
-  
+
   <div class="test-section">
     <h4>Quick Actions:</h4>
     <button id="addCurrentDomain">Add Current Site as Work</button>
     <button id="testTrigger">Trigger Test Popup</button>
   </div>
-  
+
   <div class="test-section">
     <h4>Manual Add:</h4>
     <input type="text" id="domainInput" placeholder="domain.com" />
@@ -50,7 +81,6 @@
     <input type="range" min="10" max="60" value="25" class="slider" id="workRange">
     <p>Value: <span id="work-time"></span></p>
   </div>
-  
 
   <div class="slidecontainer">
     <h4>Rest Time:</h4>
@@ -58,16 +88,15 @@
     <p>Value: <span id="rest-time"></span></p>
   </div>
 
-  
-  
   <div class="test-section">
     <h4>Work Domains:</h4>
     <div id="workDomains"></div>
     <button id="clearAll">Clear All Domains</button>
   </div>
-  
+
   <div id="message"></div>
-  
+
   <script src="popup.js"></script>
 </body>
+
 </html>
