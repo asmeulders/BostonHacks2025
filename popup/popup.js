@@ -6,6 +6,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTestListeners();
 });
 
+var workSlider = document.getElementById("workRange");
+var workTime = document.getElementById("work-time");
+workTime.innerHTML = workSlider.value;
+
+workSlider.addEventListener('input', (event) => {
+    workTime.innerHTML = event.target.value;
+});
+
+var restSlider = document.getElementById("restRange");
+var restTime = document.getElementById("rest-time");
+restTime.innerHTML = restSlider.value;
+
+restSlider.addEventListener('input', (event) => {
+    restTime.innerHTML = event.target.value;
+});
+
 async function loadTestInterface() {
   // Show current tab
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -132,3 +148,5 @@ function extractDomain(url) {
     return url;
   }
 }
+
+
