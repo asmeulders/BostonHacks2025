@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Testing Tools</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/testing.css">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <button class="back-button" onclick="window.location.href='../index.html'">← Back</button>
+      <h2>🧪 Testing Tools</h2>
+      <p class="page-subtitle">Development and debugging utilities</p>
+    </header>
+    
+    <main class="page-content">
+      <!-- Current Tab Info -->
+      <section class="test-section">
+        <h3>📄 Current Tab Information</h3>
+        <div class="info-card">
+          <div id="currentTab" class="current-tab-display">
+            <!-- Current tab info populated by JS -->
+          </div>
+          <div class="tab-actions">
+            <button id="addCurrentDomain" class="action-button primary">
+              Add Current Site as Work
+            </button>
+            <button id="refreshTabInfo" class="action-button secondary">
+              Refresh Info
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Manual Testing Controls -->
+      <section class="test-section">
+        <h3>⚡ Quick Actions</h3>
+        <div class="test-grid">
+          <button id="testTrigger" class="test-card primary">
+            <span class="test-icon">🧪</span>
+            <span class="test-label">Trigger Test Popup</span>
+            <span class="test-description">Show distraction alert on current page</span>
+          </button>
+          
+          <button id="simulateDistraction" class="test-card warning">
+            <span class="test-icon">📱</span>
+            <span class="test-label">Simulate Distraction</span>
+            <span class="test-description">Record fake distraction event</span>
+          </button>
+          
+          <button id="testNotification" class="test-card accent">
+            <span class="test-icon">🔔</span>
+            <span class="test-label">Test Notification</span>
+            <span class="test-description">Show browser notification</span>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Manual Domain Management -->
+      <section class="test-section">
+        <h3>🌐 Manual Domain Testing</h3>
+        <div class="domain-test-controls">
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="domainInput" 
+              placeholder="Enter domain (e.g., example.com)"
+              class="test-input"
+            />
+            <button id="manualAdd" class="action-button primary">
+              Add Domain
+            </button>
+          </div>
+          
+          <div class="domain-list-container">
+            <h4>Current Work Domains:</h4>
+            <div id="workDomains" class="domain-list">
+              <!-- Domains populated by JS -->
+            </div>
+            <button id="clearAll" class="action-button danger small">
+              Clear All Domains
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Session Testing -->
+      <section class="test-section">
+        <h3>⏰ Session Testing</h3>
+        <div class="session-test-controls">
+          <div class="time-controls">
+            <label>Test Session Duration:</label>
+            <div class="duration-buttons">
+              <button class="duration-btn" data-duration="1">1min</button>
+              <button class="duration-btn" data-duration="5">5min</button>
+              <button class="duration-btn" data-duration="10">10min</button>
+              <button class="duration-btn" data-duration="25">25min</button>
+            </div>
+          </div>
+          
+          <div class="session-actions">
+            <button id="startTestSession" class="action-button success">
+              🚀 Start Test Session
+            </button>
+            <button id="endTestSession" class="action-button warning">
+              ⏹️ End Current Session
+            </button>
+          </div>
+          
+          <div id="sessionStatus" class="session-status">
+            <!-- Session status populated by JS -->
+          </div>
+        </div>
+      </section>
+      
+      <!-- API Testing -->
+      <section class="test-section">
+        <h3>🔌 API Testing</h3>
+        <div class="api-test-controls">
+          <div class="api-test-group">
+            <h4>Background Script Communication</h4>
+            <button id="testBackgroundComm" class="test-button">
+              Test Background Communication
+            </button>
+            <div id="backgroundCommResult" class="test-result"></div>
+          </div>
+          
+          <div class="api-test-group">
+            <h4>Storage API</h4>
+            <button id="testStorageAPI" class="test-button">
+              Test Storage Read/Write
+            </button>
+            <div id="storageResult" class="test-result"></div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Debug Information -->
+      <section class="test-section">
+        <h3>🐛 Debug Information</h3>
+        <div class="debug-info">
+          <div class="debug-group">
+            <h4>Extension Info</h4>
+            <pre id="extensionInfo" class="debug-output">Loading...</pre>
+          </div>
+          
+          <div class="debug-group">
+            <h4>Storage Data</h4>
+            <pre id="storageData" class="debug-output">Loading...</pre>
+            <button id="refreshDebugInfo" class="action-button secondary small">
+              Refresh Debug Info
+            </button>
+          </div>
+          
+          <div class="debug-group">
+            <h4>Console Logs</h4>
+            <div id="consoleLogs" class="console-logs">
+              <!-- Console logs will appear here -->
+            </div>
+            <button id="clearLogs" class="action-button secondary small">
+              Clear Logs
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Export/Import Testing Data -->
+      <section class="test-section">
+        <h3>💾 Testing Data Management</h3>
+        <div class="data-management">
+          <button id="exportTestData" class="action-button secondary">
+            📤 Export Test Data
+          </button>
+          <button id="importTestData" class="action-button secondary">
+            📥 Import Test Data
+          </button>
+          <button id="resetTestData" class="action-button danger">
+            🔄 Reset All Test Data
+          </button>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Console/Message Display -->
+    <div id="testingMessage" class="status-message"></div>
+    
+    <!-- Debug Console -->
+    <div id="debugConsole" class="debug-console" style="display: none;">
+      <div class="debug-header">
+        <h4>Debug Console</h4>
+        <button id="toggleDebugConsole" class="toggle-btn">−</button>
+      </div>
+      <div class="debug-content">
+        <div id="debugOutput" class="debug-output"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/shared/common.js"></script>
+  <script src="../js/testing.js"></script>
+</body>
+</html>

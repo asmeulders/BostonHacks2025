@@ -2,72 +2,76 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body {
-      width: 300px;
-      padding: 10px;
-      font-family: Arial, sans-serif;
-    }
-    button {
-      margin: 5px 0;
-      padding: 5px 10px;
-      width: 100%;
-    }
-    input {
-      width: 100%;
-      padding: 5px;
-      margin: 5px 0;
-    }
-    .test-section {
-      border: 1px solid #ccc;
-      margin: 10px 0;
-      padding: 10px;
-    }
-  </style>
+  <title>Study Focus</title>
+  <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <h3>Study Focus - TESTING</h3>
-  
-  <div class="test-section">
-    <h4>Current Tab:</h4>
-    <div id="currentTab"></div>
+  <div class="container">
+    <header class="page-header">
+      <h1>🎯 Study Focus</h1>
+      <p class="page-subtitle">Your productivity companion</p>
+    </header>
+    
+    <main class="page-content">
+      <div class="nav-grid">
+        <a href="pages/domain-manager.html" class="nav-card">
+          <span class="nav-icon">🌐</span>
+          <h3 class="nav-title">Domain Manager</h3>
+          <p class="nav-description">Manage your work websites</p>
+        </a>
+        
+        <a href="pages/study-session.html" class="nav-card">
+          <span class="nav-icon">🍅</span>
+          <h3 class="nav-title">Study Sessions</h3>
+          <p class="nav-description">Pomodoro timer & tracking</p>
+        </a>
+        
+        <a href="pages/statistics.html" class="nav-card">
+          <span class="nav-icon">📊</span>
+          <h3 class="nav-title">Statistics</h3>
+          <p class="nav-description">View your progress</p>
+        </a>
+        
+        <a href="pages/settings.html" class="nav-card">
+          <span class="nav-icon">⚙️</span>
+          <h3 class="nav-title">Settings</h3>
+          <p class="nav-description">Configure your experience</p>
+        </a>
+      </div>
+      
+      <!-- Quick Actions Section -->
+      <section class="section-card">
+        <h3>🚀 Quick Actions</h3>
+        <div class="quick-actions">
+          <button id="quickAddDomain" class="action-button primary">
+            Add Current Site
+          </button>
+          <button id="quickStartSession" class="action-button success">
+            Start Focus Session
+          </button>
+        </div>
+      </section>
+      
+      <!-- Current Status Section -->
+      <section class="section-card">
+        <h3>📊 Current Status</h3>
+        <div id="currentStatus" class="status-display">
+          <!-- Status will be populated by JavaScript -->
+        </div>
+      </section>
+      
+      <!-- Development Section (remove in production) -->
+      <section class="section-card" style="border: 2px dashed #fbbf24; background: #fefbf3;">
+        <h3>🧪 Development Tools</h3>
+        <p class="text-sm text-secondary mb-sm">For testing and debugging</p>
+        <a href="pages/testing.html" class="action-button warning">
+          Open Testing Tools
+        </a>
+      </section>
+    </main>
   </div>
   
-  <div class="test-section">
-    <h4>Quick Actions:</h4>
-    <button id="addCurrentDomain">Add Current Site as Work</button>
-    <button id="testTrigger">Trigger Test Popup</button>
-  </div>
-  
-  <div class="test-section">
-    <h4>Manual Add:</h4>
-    <input type="text" id="domainInput" placeholder="domain.com" />
-    <button id="manualAdd">Add Domain</button>
-  </div>
-
-  <div class="slidecontainer">
-    <h4>Work Time:</h4>
-    <input type="range" min="10" max="60" value="25" class="slider" id="workRange">
-    <p>Value: <span id="work-time"></span></p>
-  </div>
-  
-
-  <div class="slidecontainer">
-    <h4>Rest Time:</h4>
-    <input type="range" min="1" max="15" value="5" class="slider" id="restRange">
-    <p>Value: <span id="rest-time"></span></p>
-  </div>
-
-  
-  
-  <div class="test-section">
-    <h4>Work Domains:</h4>
-    <div id="workDomains"></div>
-    <button id="clearAll">Clear All Domains</button>
-  </div>
-  
-  <div id="message"></div>
-  
-  <script src="popup.js"></script>
+  <script src="js/shared/common.js"></script>
+  <script src="js/index.js"></script>
 </body>
 </html>

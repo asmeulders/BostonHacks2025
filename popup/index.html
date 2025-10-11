@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Study Focus Assistant</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <h1>🎯 Study Focus Assistant</h1>
+    </header>
+    
+    <nav class="main-navigation">
+      <button class="nav-button" data-page="domain-manager">
+        <span class="nav-icon">🌐</span>
+        <span class="nav-label">Domain Manager</span>
+        <span class="nav-description">Manage work domains</span>
+      </button>
+      
+      <button class="nav-button" data-page="study-session">
+        <span class="nav-icon">⏰</span>
+        <span class="nav-label">Study Sessions</span>
+        <span class="nav-description">Pomodoro timer & tracking</span>
+      </button>
+      
+      <button class="nav-button" data-page="statistics">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Statistics</span>
+        <span class="nav-description">Study progress & insights</span>
+      </button>
+      
+      <button class="nav-button" data-page="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+        <span class="nav-description">Configure preferences</span>
+      </button>
+      
+      <button class="nav-button" data-page="testing">
+        <span class="nav-icon">🧪</span>
+        <span class="nav-label">Testing</span>
+        <span class="nav-description">Development tools</span>
+      </button>
+    </nav>
+    
+    <footer class="app-footer">
+      <div class="quick-actions">
+        <button id="quickStart" class="quick-action-btn">
+          <span>🚀</span>
+          Quick Start Session
+        </button>
+      </div>
+    </footer>
+  </div>
+  
+  <script src="js/navigation.js"></script>
+</body>
+</html>

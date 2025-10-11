@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Statistics</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/statistics.css">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <button class="back-button" onclick="window.location.href='../index.html'">← Back</button>
+      <h2>📊 Study Statistics</h2>
+    </header>
+    
+    <main class="page-content">
+      <!-- Overview Cards -->
+      <section class="overview-section">
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-content">
+              <div class="stat-value" id="currentStreak">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+          
+          <div class="stat-card secondary">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-content">
+              <div class="stat-value" id="totalStudyTime">0h</div>
+              <div class="stat-label">Total Study Time</div>
+            </div>
+          </div>
+          
+          <div class="stat-card accent">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+              <div class="stat-value" id="completionRate">0%</div>
+              <div class="stat-label">Completion Rate</div>
+            </div>
+          </div>
+          
+          <div class="stat-card warning">
+            <div class="stat-icon">📱</div>
+            <div class="stat-content">
+              <div class="stat-value" id="distractionsTotal">0</div>
+              <div class="stat-label">Distractions</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Time Period Selector -->
+      <section class="period-selector-section">
+        <div class="period-tabs">
+          <button class="period-tab active" data-period="today">Today</button>
+          <button class="period-tab" data-period="week">This Week</button>
+          <button class="period-tab" data-period="month">This Month</button>
+          <button class="period-tab" data-period="all">All Time</button>
+        </div>
+      </section>
+      
+      <!-- Charts Section -->
+      <section class="charts-section">
+        <!-- Study Time Chart -->
+        <div class="chart-container">
+          <h3>Study Time Trend</h3>
+          <div id="studyTimeChart" class="chart-placeholder">
+            <!-- Chart will be rendered here -->
+            <div class="chart-mock">
+              <div class="chart-bars">
+                <div class="chart-bar" style="height: 60%"></div>
+                <div class="chart-bar" style="height: 80%"></div>
+                <div class="chart-bar" style="height: 45%"></div>
+                <div class="chart-bar" style="height: 90%"></div>
+                <div class="chart-bar" style="height: 70%"></div>
+                <div class="chart-bar" style="height: 85%"></div>
+                <div class="chart-bar" style="height: 95%"></div>
+              </div>
+              <div class="chart-labels">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Productivity Distribution -->
+        <div class="chart-container">
+          <h3>Productivity Levels</h3>
+          <div id="productivityChart" class="chart-placeholder">
+            <div class="productivity-breakdown">
+              <div class="productivity-item">
+                <div class="productivity-color excellent"></div>
+                <span class="productivity-label">Excellent</span>
+                <span class="productivity-value" id="excellentDays">0 days</span>
+              </div>
+              <div class="productivity-item">
+                <div class="productivity-color good"></div>
+                <span class="productivity-label">Good</span>
+                <span class="productivity-value" id="goodDays">0 days</span>
+              </div>
+              <div class="productivity-item">
+                <div class="productivity-color fair"></div>
+                <span class="productivity-label">Fair</span>
+                <span class="productivity-value" id="fairDays">0 days</span>
+              </div>
+              <div class="productivity-item">
+                <div class="productivity-color poor"></div>
+                <span class="productivity-label">Poor</span>
+                <span class="productivity-value" id="poorDays">0 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Insights Section -->
+      <section class="insights-section">
+        <h3>📈 Insights & Recommendations</h3>
+        <div id="insightsList" class="insights-list">
+          <!-- AI-generated insights will appear here -->
+          <div class="insight-card placeholder">
+            <div class="insight-icon">🎯</div>
+            <div class="insight-content">
+              <div class="insight-title">Ready to start tracking!</div>
+              <div class="insight-description">Begin a study session to see personalized insights about your productivity patterns.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Achievements Section -->
+      <section class="achievements-section">
+        <h3>🏆 Achievements</h3>
+        <div id="achievementsList" class="achievements-grid">
+          <!-- Achievement badges will be populated here -->
+          <div class="achievement-card locked">
+            <div class="achievement-icon">🥇</div>
+            <div class="achievement-title">First Session</div>
+            <div class="achievement-description">Complete your first study session</div>
+          </div>
+          
+          <div class="achievement-card locked">
+            <div class="achievement-icon">🔥</div>
+            <div class="achievement-title">3-Day Streak</div>
+            <div class="achievement-description">Study for 3 consecutive days</div>
+          </div>
+          
+          <div class="achievement-card locked">
+            <div class="achievement-icon">⏰</div>
+            <div class="achievement-title">Time Master</div>
+            <div class="achievement-description">Complete 10 hours of study</div>
+          </div>
+          
+          <div class="achievement-card locked">
+            <div class="achievement-icon">🎯</div>
+            <div class="achievement-title">Focus Champion</div>
+            <div class="achievement-description">Complete 5 sessions without distractions</div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Export/Data Management -->
+      <section class="data-management-section">
+        <h3>📤 Data Management</h3>
+        <div class="data-actions">
+          <button id="exportData" class="action-button secondary">
+            Export Study Data
+          </button>
+          <button id="resetStats" class="action-button danger">
+            Reset All Statistics
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <script src="../js/shared/common.js"></script>
+  <script src="../js/statistics.js"></script>
+</body>
+</html>
