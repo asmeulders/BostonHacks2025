@@ -63,11 +63,11 @@ export class StudyFocusManager {
       }
 
       // Only show distraction prompts if there's an active session
-      if (!activeSession) {
-        console.log('No active session, skipping distraction check for:', tab.url);
-        return;
-      }
-
+      // if (!activeSession) {
+      //   console.log('No active session, skipping distraction check for:', tab.url);
+      //   return;
+      // }
+      
       const domain = this.extractDomain(tab.url);
       const isWorkTab = this.isWorkDomain(domain);
 
