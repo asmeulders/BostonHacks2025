@@ -3,13 +3,17 @@
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('🔔 Content script received message:', message);
+  
   switch (message.action) {
     case 'showDistractionAlert':
+      console.log('🚨 Content script showing distraction alert for:', message.domain);
       showDistractionAlert(message.domain);
       sendResponse({ success: true });
       break;
     
     default:
+      console.log('❓ Unknown action received:', message.action);
       sendResponse({ success: false, error: 'Unknown action' });
   }
   return true;
@@ -34,49 +38,85 @@ function showDistractionAlert(domain) {
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 999999;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999999;
       display: flex;
       justify-content: center;
       align-items: center;
       font-family: 'RainyHearts', Arial, sans-serif;
+      backdrop-filter: blur(5px);
     ">
       <div style="
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        max-width: 400px;
+        background: #f7f3e9;
+        padding: 40px;
+        border-radius: 15px;
+        max-width: 450px;
         text-align: center;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        border: 3px solid #ff6b35;
       ">
-        <h2 style="color: #333; margin-bottom: 15px;">⚠️ Distraction Alert</h2>
-        <p style="color: #666; margin-bottom: 20px;">
-          You've switched to <strong>${domain}</strong><br>
-          Is this a work-related site?
+        <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
+        <h2 style="color: #2c5530; margin-bottom: 15px; font-size: 28px;">Focus Mode Active!</h2>
+        <p style="color: #004e89; margin-bottom: 25px; font-size: 18px; line-height: 1.5;">
+          You're trying to visit <strong style="color: #ff6b35;">${domain}</strong><br><br>
+          This site isn't in your work domains list.<br>
+          Is this related to your current study session?
         </p>
-        <div style="display: flex; gap: 10px; justify-content: center;">
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
           <button id="study-focus-yes" style="
-            background: #4CAF50;
+            background: #2c5530;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            border: 3px solid #2c5530;
+            padding: 15px 25px;
+            border-radius: 25px;
             cursor: pointer;
             font-size: 16px;
-          ">Yes, it's work</button>
+            font-family: 'RainyHearts', Arial, sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+          " onmouseover="this.style.background='#1a3a1f'" onmouseout="this.style.background='#2c5530'">
+            ✅ Yes, it's for work
+          </button>
           <button id="study-focus-no" style="
-            background: #f44336;
+            background: #ff6b35;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            border: 3px solid #ff6b35;
+            padding: 15px 25px;
+            border-radius: 25px;
             cursor: pointer;
             font-size: 16px;
-          ">No, go back</button>
+            font-family: 'RainyHearts', Arial, sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+          " onmouseover="this.style.background='#e55a2b'" onmouseout="this.style.background='#ff6b35'">
+            🔙 Take me back
+          </button>
         </div>
       </div>
     </div>
   `;
+
+  // Block page interaction
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+  
+  // Prevent all clicks on the page except our overlay
+  overlay.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+  
+  // Block all page interactions
+  document.addEventListener('click', blockInteraction, true);
+  document.addEventListener('keydown', blockInteraction, true);
+  document.addEventListener('scroll', blockInteraction, true);
+  
+  function blockInteraction(e) {
+    if (!overlay.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }
 
   document.body.appendChild(overlay);
 
@@ -86,6 +126,12 @@ function showDistractionAlert(domain) {
       action: 'addWorkDomain',
       domain: domain
     });
+    // Restore page interaction
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.removeEventListener('click', blockInteraction, true);
+    document.removeEventListener('keydown', blockInteraction, true);
+    document.removeEventListener('scroll', blockInteraction, true);
     overlay.remove();
   });
 
@@ -93,15 +139,23 @@ function showDistractionAlert(domain) {
     chrome.runtime.sendMessage({
       action: 'goBack'
     });
+    // Don't restore page interaction since we're leaving
     overlay.remove();
   });
 
-  // Auto-remove after 15 seconds
-  setTimeout(() => {
-    if (overlay.parentNode) {
+  // Show a countdown instead of auto-removal
+  let countdown = 30;
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      // Force go back after 30 seconds
+      chrome.runtime.sendMessage({
+        action: 'goBack'
+      });
       overlay.remove();
+      clearInterval(countdownInterval);
     }
-  }, 15000);
+  }, 1000);
 }
 
 // Utility function to extract domain from current page
@@ -109,4 +163,5 @@ function getCurrentDomain() {
   return window.location.hostname;
 }
 
-console.log('Distraction Alert content script loaded on:', getCurrentDomain());
+console.log('🔧 Distraction Alert content script loaded on:', getCurrentDomain());
+console.log('📱 Ready to receive distraction alerts!');

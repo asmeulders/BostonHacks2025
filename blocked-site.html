@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Blocked - Focus Mode</title>
+    <link rel="stylesheet" href="focus-mode.css">
+    <style>
+        @font-face {
+            font-family: 'RainyHearts';
+            src: url('fonts/rainyhearts.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'RainyHearts', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .message {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .blocked-site {
+            font-size: 1.1em;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-family: 'RainyHearts', Arial, sans-serif;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #2c5530;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1a3a1f;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: #ff6b35;
+            transform: translateY(-2px);
+        }
+        
+        .progress {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+        
+        .progress h3 {
+            margin-bottom: 15px;
+            color: #f5d216;
+        }
+        
+        .timer-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1>Focus Mode Active</h1>
+        
+        <div class="message">
+            This site is blocked during your work session to help you stay focused!
+        </div>
+        
+        <div class="blocked-site" id="blockedSite">
+            Loading...
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="closeTab()">
+                🎯 Back to Work
+            </button>
+            <button class="btn btn-secondary" onclick="openExtension()">
+                ⚙️ Manage Timer
+            </button>
+        </div>
+        
+        <div class="progress" id="sessionProgress">
+            <h3>📚 Current Study Session</h3>
+            <div class="timer-display" id="timerDisplay">Loading...</div>
+            <div>Stay strong! You're building great focus habits! 💪</div>
+        </div>
+    </div>
+
+    <script>
+        // Get blocked site from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const blockedSite = urlParams.get('blocked');
+        
+        if (blockedSite) {
+            document.getElementById('blockedSite').textContent = `🚫 ${decodeURIComponent(blockedSite)}`;
+        }
+        
+        // Get timer state and update display
+        async function updateTimer() {
+            try {
+                const response = await chrome.runtime.sendMessage({
+                    action: 'GET_TIMER_STATE'
+                });
+                
+                if (response && response.success && response.state) {
+                    const state = response.state;
+                    const timerDisplay = document.getElementById('timerDisplay');
+                    
+                    if (state.isRunning) {
+                        const minutes = Math.floor(state.timeRemaining / 60);
+                        const seconds = state.timeRemaining % 60;
+                        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} remaining`;
+                    } else {
+                        timerDisplay.textContent = 'No active session';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not get timer state:', error);
+                document.getElementById('timerDisplay').textContent = 'Timer unavailable';
+            }
+        }
+        
+        function closeTab() {
+            window.close();
+        }
+        
+        function openExtension() {
+            chrome.runtime.openOptionsPage();
+        }
+        
+        // Update timer every second
+        updateTimer();
+        setInterval(updateTimer, 1000);
+        
+        // Auto-close after session ends
+        setInterval(async () => {
+            try {
+                const response = await chrome.runtime.sendMessage({
+                    action: 'GET_TIMER_STATE'
+                });
+                
+                if (response && response.success && response.state && !response.state.isRunning) {
+                    setTimeout(() => {
+                        window.close();
+                    }, 2000);
+                }
+            } catch (error) {
+                // Ignore errors
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
