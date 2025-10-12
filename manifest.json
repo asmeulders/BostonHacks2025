@@ -1,5 +1,5 @@
 {
-  "name": "Study Focus Assistant",
+  "name": "Palmodoro",
   "description": "Chrome extension to reduce distractions by managing work tabs and prompting users when switching to non-work tabs",
   "version": "1.0",
   "manifest_version": 3,
