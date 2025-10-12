@@ -39,10 +39,6 @@ let studySession = {
   startTime: null
 };
 
-// Task Management Storage
-let tasks = [];
-const TASK_STORAGE_KEY = 'studyTasks';
-
 // Get random encouraging phrase
 function getEncouragingPhrase() {
   return encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
@@ -130,75 +126,6 @@ async function askGemini(question) {
     return 'Gemini API key not configured. Please set it up first.';
   }
 
-  // First check if this is a task command
-  const taskCommand = parseTaskCommand(question);
-  if (taskCommand) {
-    console.log('📋 Task command detected:', taskCommand);
-    
-    try {
-      let response = '';
-      
-      switch (taskCommand.action) {
-        case 'create':
-          await createTask(taskCommand.task);
-          response = `✅ Perfect! I've added "${taskCommand.task}" to your task list. Having clear tasks helps you stay organized and focused on your studies! 
-
-🎯 **Study Tip:** Break down complex assignments into smaller, manageable tasks. This makes big projects feel less overwhelming and gives you more frequent victories to celebrate!
-
-What would you like to work on first?`;
-          break;
-          
-        case 'delete':
-          await deleteTask(taskCommand.task);
-          response = `🗑️ Alright! I've removed "${taskCommand.task}" from your task list. 
-
-💡 **Remember:** It's okay to adjust your task list as priorities change. Being flexible with your planning is part of effective studying!
-
-What's next on your agenda?`;
-          break;
-          
-        case 'done':
-          await markTaskDone(taskCommand.task);
-          response = `🎉 Fantastic work! You've completed "${taskCommand.task}". I'm so proud of your progress! 
-
-⭐ **Celebration Time:** Take a moment to acknowledge what you've accomplished. These small wins build momentum for bigger achievements!
-
-Ready to tackle the next challenge?`;
-          break;
-          
-        case 'list':
-          const tasks = await getAllTasks();
-          if (tasks.length === 0) {
-            response = `📝 Your task list is currently empty! 
-
-🚀 **Getting Started:** Try telling me "create a task to review chapter 3" or "add homework: math problems 1-20" to get organized!
-
-What would you like to accomplish today?`;
-          } else {
-            const taskList = tasks.map((task, index) => 
-              `${index + 1}. ${task.completed ? '✅' : '📌'} ${task.text}`
-            ).join('\n');
-            
-            response = `📋 **Your Current Tasks:**
-
-${taskList}
-
-🎯 **Study Strategy:** Focus on one task at a time for better concentration and quality work. Which one feels most important right now?`;
-          }
-          break;
-          
-        default:
-          response = '🤔 I understand you want to manage tasks, but I\'m not sure exactly what you\'d like me to do. Try phrases like "create task", "mark done", "delete task", or "show my tasks"!';
-      }
-      
-      return response;
-      
-    } catch (error) {
-      console.error('❌ Task management error:', error);
-      return '⚠️ I had trouble managing your task. Don\'t worry though - let\'s keep focusing on your studies! What academic question can I help you with?';
-    }
-  }
-
   console.log('🎓 Professor StudyBot is analyzing your question:', question);
 
   try {
@@ -272,125 +199,6 @@ async function handleStudyQuestion(question) {
   }
 }
 
-// ===============================
-// TASK MANAGEMENT SYSTEM
-// ===============================
-
-// Load tasks from Chrome storage
-async function loadTasks() {
-  try {
-    const result = await chrome.storage.local.get([TASK_STORAGE_KEY]);
-    tasks = result[TASK_STORAGE_KEY] || [];
-    console.log('📋 Loaded tasks:', tasks.length);
-  } catch (error) {
-    console.error('❌ Error loading tasks:', error);
-    tasks = [];
-  }
-}
-
-// Save tasks to Chrome storage
-async function saveTasks() {
-  try {
-    await chrome.storage.local.set({ [TASK_STORAGE_KEY]: tasks });
-    console.log('💾 Tasks saved to storage');
-  } catch (error) {
-    console.error('❌ Error saving tasks:', error);
-  }
-}
-
-// Create a new task
-async function createTask(taskText) {
-  const newTask = {
-    id: Date.now().toString(),
-    text: taskText.trim(),
-    completed: false,
-    createdAt: new Date().toISOString(),
-    completedAt: null
-  };
-  
-  tasks.push(newTask);
-  await saveTasks();
-  console.log('✅ Task created:', newTask);
-  return newTask;
-}
-
-// Delete a task
-async function deleteTask(taskText) {
-  const normalizedText = taskText.toLowerCase().trim();
-  const taskIndex = tasks.findIndex(task => 
-    task.text.toLowerCase().includes(normalizedText) || 
-    normalizedText.includes(task.text.toLowerCase())
-  );
-  
-  if (taskIndex !== -1) {
-    const deletedTask = tasks.splice(taskIndex, 1)[0];
-    await saveTasks();
-    console.log('🗑️ Task deleted:', deletedTask);
-    return deletedTask;
-  }
-  
-  throw new Error(`Task "${taskText}" not found`);
-}
-
-// Mark task as done
-async function markTaskDone(taskText) {
-  const normalizedText = taskText.toLowerCase().trim();
-  const task = tasks.find(task => 
-    task.text.toLowerCase().includes(normalizedText) || 
-    normalizedText.includes(task.text.toLowerCase())
-  );
-  
-  if (task && !task.completed) {
-    task.completed = true;
-    task.completedAt = new Date().toISOString();
-    await saveTasks();
-    console.log('✅ Task marked done:', task);
-    return task;
-  }
-  
-  if (task && task.completed) {
-    throw new Error(`Task "${taskText}" is already completed`);
-  }
-  
-  throw new Error(`Task "${taskText}" not found`);
-}
-
-// Get all tasks
-async function getAllTasks() {
-  await loadTasks(); // Ensure we have latest data
-  return [...tasks]; // Return copy
-}
-
-// Parse task commands from natural language
-function parseTaskCommand(text) {
-  const lowercaseText = text.toLowerCase().trim();
-  
-  // Create task patterns
-  if (lowercaseText.match(/^(create|add|new)\s+(task|todo)?\s*:?\s*(.+)$/i)) {
-    const match = lowercaseText.match(/^(create|add|new)\s+(task|todo)?\s*:?\s*(.+)$/i);
-    return { action: 'create', task: match[3] };
-  }
-  
-  // Delete task patterns
-  if (lowercaseText.match(/^(delete|remove|clear)\s+(task|todo)?\s*:?\s*(.+)$/i)) {
-    const match = lowercaseText.match(/^(delete|remove|clear)\s+(task|todo)?\s*:?\s*(.+)$/i);
-    return { action: 'delete', task: match[3] };
-  }
-  
-  // Mark done patterns
-  if (lowercaseText.match(/^(done|complete|finish|finished)\s+(task|todo)?\s*:?\s*(.+)$/i)) {
-    const match = lowercaseText.match(/^(done|complete|finish|finished)\s+(task|todo)?\s*:?\s*(.+)$/i);
-    return { action: 'done', task: match[3] };
-  }
-  
-  // List tasks patterns
-  if (lowercaseText.match(/^(show|list|display|view)\s*(my\s*)?(tasks|todos|task list|todo list)$/i)) {
-    return { action: 'list' };
-  }
-  
-  return null;
-}
-
 // ===================
 // TIMER FUNCTIONALITY
 // ===================
@@ -398,16 +206,8 @@ function parseTaskCommand(text) {
 // Tab monitoring for distraction detection
 async function handleTabSwitch(tabId) {
   try {
-    console.log('🔄 handleTabSwitch called for tab:', tabId);
-    console.log('📊 Timer state:', {
-      isRunning: timerState.isRunning,
-      phase: timerState.phase,
-      workDomains: timerState.workDomains
-    });
-    
     // Only monitor during work sessions
     if (!timerState.isRunning || timerState.phase !== 'work') {
-      console.log('❌ Not monitoring - timer not running or not in work phase');
       return;
     }
 
@@ -431,24 +231,10 @@ async function handleTabSwitch(tabId) {
       return;
     }
 
-    // Enhanced distraction detection - show alert for any non-work domains during work sessions
-    const isWorkDomain = timerState.workDomains.some(workDomain => 
-      domain === workDomain || 
-      domain.includes(workDomain) || 
-      workDomain.includes(domain)
-    );
-    
-    console.log('🔍 Domain check:', {
-      domain: domain,
-      workDomains: timerState.workDomains,
-      isWorkDomain: isWorkDomain
-    });
-    
-    if (!isWorkDomain) {
-      console.log('⚠️ Non-work domain detected during work session:', domain);
+    // Check if current domain is in work domains
+    if (!timerState.workDomains.includes(domain)) {
+      console.log('⚠️ Potential distraction detected:', domain);
       await showDistractionAlert(tabId, domain);
-    } else {
-      console.log('✅ Work domain - allowing access:', domain);
     }
 
   } catch (error) {
@@ -472,7 +258,13 @@ async function showDistractionAlert(tabId, domain) {
   try {
     console.log('🚨 Showing distraction alert for:', domain);
     
-    // Send message to content script (already loaded via manifest)
+    // Inject content script to show alert
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['distraction-alert/distraction-content.js']
+    });
+
+    // Send message to show alert
     await chrome.tabs.sendMessage(tabId, {
       action: 'showDistractionAlert',
       domain: domain
@@ -480,62 +272,7 @@ async function showDistractionAlert(tabId, domain) {
 
   } catch (error) {
     console.error('❌ Error showing distraction alert:', error);
-    // If content script isn't loaded, try injecting it
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ['distraction-alert/distraction-content.js']
-      });
-      
-      // Try sending message again
-      await chrome.tabs.sendMessage(tabId, {
-        action: 'showDistractionAlert',
-        domain: domain
-      });
-    } catch (fallbackError) {
-      console.error('❌ Fallback injection also failed:', fallbackError);
-    }
   }
-}
-
-// Handle domain addition
-async function handleDomainAdded(domain) {
-  if (!timerState.workDomains.includes(domain)) {
-    timerState.workDomains.push(domain);
-    await saveTimerState();
-    
-    console.log('✅ Domain added to work domains:', domain);
-    console.log('🔄 Updated work domains list:', timerState.workDomains);
-  }
-}
-
-// ===============================
-// ENHANCED DISTRACTION BLOCKING SYSTEM
-// ===============================
-
-// Enhanced blocking logic - shows distraction alert for non-work domains
-function isDistractionDomain(domain) {
-  // Common distracting sites
-  const commonDistractingSites = [
-    'youtube.com', 'facebook.com', 'twitter.com', 'instagram.com', 
-    'tiktok.com', 'reddit.com', 'netflix.com', 'twitch.tv', 
-    'discord.com', 'whatsapp.com', 'telegram.org', 'snapchat.com',
-    'pinterest.com', 'tumblr.com', 'linkedin.com', 'amazon.com',
-    'ebay.com', 'aliexpress.com', 'spotify.com', 'soundcloud.com'
-  ];
-  
-  // Check if current domain is a known distracting site
-  const isDistractingSite = commonDistractingSites.some(distractor => 
-    domain.includes(distractor) || distractor.includes(domain)
-  );
-  
-  // Check if it's already a work domain
-  const isWorkDomain = timerState.workDomains.some(workDomain => 
-    workDomain.includes(domain) || domain.includes(workDomain)
-  );
-  
-  // It's a distraction if it's a known distracting site AND not a work domain
-  return isDistractingSite && !isWorkDomain;
 }
 
 // Initialize timer state from storage on startup
@@ -593,8 +330,6 @@ async function startSession(phase, duration) {
   await saveTimerState();
   setupAlarm();
   broadcastStateUpdate();
-  
-  console.log(`🎯 ${phase === 'work' ? 'Work session started - distraction alerts enabled' : 'Break session started'}`);
 }
 
 // Setup alarm for timer completion
@@ -636,8 +371,6 @@ async function completeCurrentSession() {
   await saveTimerState();
   broadcastStateUpdate();
   
-  console.log('✅ Work session completed - distraction monitoring reset');
-  
   // Show completion page
   await showCompletionTab(completedPhase);
 }
@@ -663,8 +396,6 @@ async function stopTimer() {
   
   await saveTimerState();
   broadcastStateUpdate();
-  
-  console.log('🛑 Timer stopped - distraction alerts disabled');
 }
 
 // Get current timer state for popup
@@ -757,58 +488,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Indicates that the response is asynchronous
   }
 
-  // Handle domain management
-  if (request.type === 'DOMAIN_ADDED') {
-    // Add domain to work domains and update blocking rules
-    handleDomainAdded(request.domain)
-      .then(() => sendResponse({ success: true }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-
-  // Test blocking functionality
-  if (request.action === 'TEST_BLOCKING') {
-    chrome.tabs.query({ active: true, currentWindow: true })
-      .then(async tabs => {
-        if (tabs[0]) {
-          const domain = getDomainFromUrl(tabs[0].url);
-          console.log('🧪 Testing blocking on domain:', domain);
-          await showDistractionAlert(tabs[0].id, domain);
-          sendResponse({ success: true, message: 'Test alert sent' });
-        }
-      })
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-
-  // Handle distraction alert responses
-  if (request.action === 'addWorkDomain') {
-    // User clicked "Yes, it's work" - add domain to work list
-    handleDomainAdded(request.domain)
-      .then(() => {
-        console.log('✅ Domain marked as work domain from alert:', request.domain);
-        sendResponse({ success: true });
-      })
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-
-  if (request.action === 'goBack') {
-    // User clicked "No, go back" - close current tab or navigate back
-    chrome.tabs.query({ active: true, currentWindow: true })
-      .then(tabs => {
-        if (tabs[0]) {
-          chrome.tabs.goBack(tabs[0].id).catch(() => {
-            // If can't go back, close the tab
-            chrome.tabs.remove(tabs[0].id);
-          });
-        }
-        sendResponse({ success: true });
-      })
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-
   // Legacy support for existing functionality
   if (request.action === 'OPEN_SESSION_COMPLETE_TAB') {
     showCompletionTab(request.phase);
@@ -820,7 +499,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Initialize when service worker starts
 initializeTimer();
 initializeStudyFocusManager();
-loadTasks(); // Initialize task management
 
 // Force load API key immediately
 loadGeminiApiKey();

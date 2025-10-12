@@ -36,7 +36,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["config.json", "teacher-config.json", "fonts/rainyhearts.ttf", "focus-mode.css"],
+      "resources": ["config.json", "teacher-config.json"],
       "matches": ["<all_urls>"]
     }
   ]
