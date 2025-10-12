@@ -80,24 +80,11 @@ class DomainManager {
     }
 
     // Clear all domains button
-    const clearAllBtn = document.getElementById('clearAllDomains');
+    const clearAllBtn = document.getElementById('clearAll');
     if (clearAllBtn) {
       clearAllBtn.addEventListener('click', () => this.clearAllDomains());
     }
-
-    // Import/Export buttons
-    const exportBtn = document.getElementById('exportDomains');
-    const importBtn = document.getElementById('importDomains');
-    const importFile = document.getElementById('importFile');
-    
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => this.exportDomains());
-    }
-    
-    if (importBtn && importFile) {
-      importBtn.addEventListener('click', () => importFile.click());
-      importFile.addEventListener('change', (e) => this.importDomains(e));
-    }
+  
 
     // Search functionality
     const searchInput = document.getElementById('domainSearch');
