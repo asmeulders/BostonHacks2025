@@ -324,12 +324,16 @@ async function startSession(phase, duration) {
     startTime: now,
     endTime: now + (duration * 1000),
     duration: duration,
-    activeTabId: null // Reset tab tracking for new sessions
+    // Reset work tracking when starting new work session
+    activeTabId: phase === 'work' ? null : timerState.activeTabId,
+    workDomains: phase === 'work' ? [] : timerState.workDomains
   };
 
   await saveTimerState();
   setupAlarm();
   broadcastStateUpdate();
+  
+  console.log(`🎯 ${phase === 'work' ? 'Work session started - distraction alerts enabled' : 'Break session started'}`);
 }
 
 // Setup alarm for timer completion
@@ -362,17 +366,17 @@ async function completeCurrentSession() {
   
   const completedPhase = timerState.phase;
   
-  // Update state
-  timerState.isRunning = false;
-  timerState.isPaused = false;
-  timerState.activeTabId = null;
-  timerState.workDomains = []; // Reset work domains
-  
-  await saveTimerState();
-  broadcastStateUpdate();
-  
-  // Show completion page
+  // Show completion notification tab
   await showCompletionTab(completedPhase);
+  
+  // Determine next phase and duration
+  const nextPhase = completedPhase === 'work' ? 'break' : 'work';
+  const nextDuration = nextPhase === 'work' ? timerState.workDuration : timerState.breakDuration;
+  
+  console.log(`🔄 Auto-starting ${nextPhase} session for ${nextDuration} seconds`);
+  
+  // Start the next session automatically
+  await startSession(nextPhase, nextDuration);
 }
 
 // Show session completion tab
