@@ -1,4 +1,5 @@
 import { DomainManagerLogic, domainManagerLogic  } from './popup/js/domain-manager-logic.js';
+
 console.log('🔧 Pomodoro Service Worker with Study Teacher starting up...');
 
 // StudyFocusManager functionality (inline implementation)
@@ -105,7 +106,7 @@ async function loadGeminiApiKey() {
     const response = await fetch(chrome.runtime.getURL('config.json'));
     const config = await response.json();
     
-    if (config.geminiApiKey && config.geminiApiKey.trim()) {
+    if (config.geminiApiKey && geminiApiKey.trim()) {
       geminiApiKey = config.geminiApiKey.trim();
       await chrome.storage.local.set({ geminiApiKey: geminiApiKey });
       console.log('🔑 API key loaded from config.json and stored in Chrome storage');
