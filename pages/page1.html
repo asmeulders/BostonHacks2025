@@ -5,24 +5,54 @@
     <title>Page 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body{margin:0;background:#0f172a;color:#e5e7eb;font-family:ui-sans-serif,system-ui;}
-        .wrap{width:360px;min-height:420px;padding:16px;}
-        header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-        a.back{color:#60a5fa;text-decoration:none;font-weight:600}
-        .card{background:#1f2937;border:1px solid #283341;border-radius:12px;padding:16px}
-        h1{font-size:18px;margin:0 0 8px}
-        p{margin:0;color:#cbd5e1}
+        body {
+            margin: 0;
+            background: transparent;
+            color: #e5e7eb;
+            font-family: system-ui, sans-serif;
+        }
+        .wrap {
+            padding: 16px;
+            text-align: center;
+        }
+        #backBtn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+        #backBtn:hover {
+            background: rgba(255,255,255,0.25);
+        }
     </style>
 </head>
 <body>
 <div class="wrap">
-    <header>
-        <a class="back" href="../popup/popup.html">← Back</a>
-        <h1>Page 1</h1>
-    </header>
-    <div class="card">
-        <p>This is Page 1 content. Add your UI logic here.</p>
-    </div>
+    <h2>Page 1</h2>
+    <p>This is Page 1 inside the iframe.</p>
+
+    <!-- 🡇 The Back button -->
+    <a href="#" id="backBtn">⬅ Back</a>
 </div>
+
+<script>
+    document.getElementById('backBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        // Close the entire popup window
+        if (window.parent) {
+            window.parent.close();      // works when embedded in popup iframe
+        } else {
+            window.close();             // fallback if opened standalone
+        }
+    });
+</script>
 </body>
 </html>
+

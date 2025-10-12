@@ -2,27 +2,46 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>4 Buttons</title>
-    <link rel="stylesheet" href="popup.css" />
+    <title>SPA Popup</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-<header>
-    <h1>Extension Menu</h1>
-    <p>Choose a page:</p>
-</header>
+<main>
+    <div class="screen">
+        <!-- grid of app buttons -->
+        <div class="grid" id="nav">
+            <div class="btn" id="button_0" data-view="page1">Page 1</div>
+            <div class="btn" id="button_1" data-view="page2">Page 2</div>
+            <div class="btn" id="button_2" data-view="page3">Page 3</div>
+            <div class="btn" id="button_3" data-view="page4">
+                <img src="../icons/note_icon.png" alt="Notes" class="btn-icon">
+            </div>
+            <div class="btn" id="button_4" data-view="page5">Page 5</div>
+            <div class="btn" id="button_5" data-view="page6">Page 6</div>
+            <div class="btn" id="button_6" data-view="page7">Page 7</div>
+            <div class="btn" id="button_7" data-view="page8">Page 8</div>
+            <div class="btn" id="button_8" data-view="page9">Page 9</div>
 
-<main class="grid">
-    <a class="app" href="../pages/page1.html">Page 1</a>
-    <a class="app" href="../pages/page2.html">Page 2</a>
-    <a class="app" href="../pages/page3.html">Page 3</a>
-    <a class="app" href="pages/page4.html">Page 4</a>
-    <a class="app" href="pages/page5.html">Home</a>
+            <!-- search bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search..." />
+                <button id="searchBtn" aria-label="Search"></button>
+            </div>
+
+
+
+        </div>
+
+        <!-- iframe that loads internal pages -->
+        <iframe id="panel" class="panel" hidden title="panel"></iframe>
+    </div>
 
 </main>
-
-<footer>
-    <small>v1.0.0</small>
-</footer>
+<!-- home button (image behind frame) -->
+<div id="home_0">
+    <img src="images/palmOs_home.png" alt="Home" class="home-icon">
+</div>
+<script src="popup.js"></script>
 </body>
 </html>

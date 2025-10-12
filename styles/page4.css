@@ -1,0 +1,258 @@
+@font-face {
+    font-family: "MyFont";
+    src: url("../fonts/rainyhearts.ttf") format("truetype");
+    font-display: swap;  /* loads fallback first for speed */
+}
+body,
+.title,
+.label,
+.add-btn,
+.back-btn,
+.empty {
+    font-family: "MyFont", monospace;
+}
+
+
+:root {
+    /* ---------- LIGHT PASTEL THEME ---------- */
+    --bg: #fffaf2;          /* warm off-white background */
+    --card: #fff5e4;        /* pale cream card area */
+    --muted: #a98c5c;       /* muted brown text */
+    --text: #4c3f34;        /* main dark brown text */
+    --accent: #ffcb69;      /* soft pastel yellow highlight */
+    --danger: #e07a5f;      /* muted coral-brown for delete */
+    --ring: rgba(255, 207, 102, 0.5); /* yellow focus ring */
+}
+
+/* ---------- GLOBAL RESET ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--card);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.spacer {
+    width: 60px;
+}
+
+.back-btn {
+    font-size: 12px;
+    border: none;
+    background: #f9e8b5;
+    color: #705d51;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.back-btn:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+}
+
+/* ---------- MAIN CONTENT ---------- */
+.content {
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    margin: 16px 0 0;
+    padding: 0 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ---------- NEW TASK ROW ---------- */
+.new-task {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.new-task input {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    background: #fffefc;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-family: "MyFont", monospace;
+}
+
+.new-task input:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 0;
+}
+
+/* ---------- ADD BUTTON ---------- */
+.add-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: var(--text);
+    font-weight: 700;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.add-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* ---------- TASK LIST ---------- */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 320px;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.label {
+    font-size: 16px;
+    line-height: 1.3;
+    word-break: break-word;
+    color: var(--text);
+}
+
+.item.done .label {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+
+/* ---------- DELETE BUTTON ---------- */
+.del-btn {
+    font-family: "MyFont", monospace;
+    border: none;
+    border-radius: 6px;
+    background: #f5d7a3;
+    color: var(--text);
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 560;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.del-btn:hover {
+    background: var(--danger);
+    color: #fffefc;
+    transform: translateY(-1px);
+}
+
+/* ---------- EMPTY MESSAGE ---------- */
+.empty {
+    color: var(--muted);
+    text-align: center;
+    padding: 12px 0;
+    font-size: 13px;
+}
+
+/* ---------- SMALL SCREEN SAFETY ---------- */
+@media (max-width: 340px) {
+    .new-task input {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .add-btn {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+}
+
+/* ---------- CUSTOM SCROLLBAR (for WebKit browsers: Chrome, Edge, etc.) ---------- */
+.list::-webkit-scrollbar {
+    width: 6px;                     /* <== make scrollbar thinner (default ~12px) */
+}
+
+.list::-webkit-scrollbar-track {
+    background: transparent;         /* hide or lighten the track */
+}
+
+.list::-webkit-scrollbar-thumb {
+    background: rgba(150, 120, 70, 0.3);  /* soft brown thumb */
+    border-radius: 10px;             /* rounded edges */
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+    background: rgba(150, 120, 70, 0.6);  /* darker on hover */
+}
+
+/* Optional: make the global popup scrollbar thinner too */
+body::-webkit-scrollbar {
+    width: 6px;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: rgba(150, 120, 70, 0.3);
+    border-radius: 10px;
+}
+
