@@ -1,3 +1,4 @@
+import { DomainManagerLogic, domainManagerLogic  } from './popup/js/domain-manager-logic.js';
 console.log('🔧 Pomodoro Service Worker with Study Teacher starting up...');
 
 // StudyFocusManager functionality (inline implementation)
@@ -93,12 +94,12 @@ Now help them learn! 🚀`;
 async function loadGeminiApiKey() {
   try {
     // First check Chrome storage
-    const storageResult = await chrome.storage.local.get(['geminiApiKey']);
-    if (storageResult.geminiApiKey) {
-      geminiApiKey = storageResult.geminiApiKey;
-      console.log('🔑 API key loaded from Chrome storage');
-      return;
-    }
+    // const storageResult = await chrome.storage.local.get(['geminiApiKey']);
+    // if (storageResult.geminiApiKey) {
+    //   geminiApiKey = storageResult.geminiApiKey;
+    //   console.log('🔑 API key loaded from Chrome storage', geminiApiKey);
+    //   return;
+    // }
     
     // Try to load from config.json
     const response = await fetch(chrome.runtime.getURL('config.json'));
@@ -324,7 +325,6 @@ async function startSession(phase, duration) {
     startTime: now,
     endTime: now + (duration * 1000),
     duration: duration,
-    // Reset work tracking when starting new work session
     activeTabId: phase === 'work' ? null : timerState.activeTabId,
     workDomains: phase === 'work' ? [] : timerState.workDomains
   };
@@ -366,16 +366,18 @@ async function completeCurrentSession() {
   
   const completedPhase = timerState.phase;
   
-  // Show completion notification tab
+  // Update state
   await showCompletionTab(completedPhase);
   
   // Determine next phase and duration
   const nextPhase = completedPhase === 'work' ? 'break' : 'work';
   const nextDuration = nextPhase === 'work' ? timerState.workDuration : timerState.breakDuration;
-  
+
   console.log(`🔄 Auto-starting ${nextPhase} session for ${nextDuration} seconds`);
   
   // Start the next session automatically
+
+
   await startSession(nextPhase, nextDuration);
 }
 
@@ -496,6 +498,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'OPEN_SESSION_COMPLETE_TAB') {
     showCompletionTab(request.phase);
     sendResponse({ success: true });
+    return true;
+  }
+
+  // Study chat functionality
+  if (request.action === 'addWorkDomain') {
+    domainManagerLogic.add(request.domain)
+      .then(() => sendResponse({ success: true }))
+      .catch(err => sendResponse({ success: false, error: err.message }));
+    domainManagerUI
+    return true;
+  }
+
+  // Study chat functionality
+  if (request.action === 'goBack') {
+    domainManagerLogic.add(request.domain)
+      .then(() => sendResponse({ success: true }))
+      .catch(err => sendResponse({ success: false, error: err.message }));
+    domainManagerUI
     return true;
   }
 });

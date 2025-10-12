@@ -35,7 +35,7 @@ class StudyHelper {
                         parts: [{
                             text: `You are a helpful work/study assistant. Answer this work/study question clearly and concisely.
                                     If the question seems like a distraction or unrelated to working, steer the user back
-                                    to work. Remember to be friendly and helpful.: ${question}`
+                                    to work. Remember to be friendly and helpful but limit your responses to 60 words.: ${question}`
                         }]
                     }]
                 })

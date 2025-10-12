@@ -1,6 +1,6 @@
 // Domain Manager JavaScript functionality
 
-class DomainManager {
+export class DomainManager {
   constructor() {
     this.currentTab = null;
     this.workDomains = [];
@@ -208,6 +208,35 @@ class DomainManager {
     }
   }
 
+  // async addDomain(domain) {
+  //   if (!domain) {
+  //     PopupUtils.showError('Cannot extract domain from current URL');
+  //     return;
+  //   }
+
+  //   if (this.workDomains.includes(domain)) {
+  //     PopupUtils.showWarning('Domain is already in work domains list');
+  //     return;
+  //   }
+
+  //   try {
+  //     this.workDomains.push(domain);
+  //     await this.saveWorkDomains();
+      
+  //     // Notify background script
+  //     await PopupUtils.sendMessage({
+  //       type: 'DOMAIN_ADDED',
+  //       domain: domain
+  //     });
+
+  //     PopupUtils.showSuccess(`Added "${domain}" to work domains`);
+  //     this.updateUI();
+  //   } catch (error) {
+  //     PopupUtils.logError('Failed to add current domain:', error);
+  //     PopupUtils.showError('Failed to add domain. Please try again.');
+  //   }
+  // }
+
   async addCurrentDomain() {
     if (!this.currentTab) {
       PopupUtils.showError('No current tab information available');
@@ -337,12 +366,4 @@ class DomainManager {
   }
 }
 
-// Initialize domain manager when page loads
-let domainManager;
-
-document.addEventListener('DOMContentLoaded', () => {
-  domainManager = new DomainManager();
-});
-
-// Export for global access
-window.domainManager = domainManager;
+export const domainManager = new DomainManager();
