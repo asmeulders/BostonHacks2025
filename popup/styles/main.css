@@ -8,39 +8,39 @@
   font-style: normal;
 }
 
-/* CSS Variables for consistent theming - Page4 Light Pastel Theme */
+/* CSS Variables for consistent theming - Clean Retro Theme */
 :root {
-  --primary-color: #ffcb69;
-  --primary-hover: #f9bb4a;
-  --secondary-color: #a98c5c;
-  --secondary-hover: #8f7449;
-  --success-color: #b8d4a4;
-  --success-hover: #a2c488;
-  --warning-color: #f9e8b5;
-  --warning-hover: #f4df9a;
-  --danger-color: #e07a5f;
-  --danger-hover: #d6654a;
-  --accent-color: #ffcb69;
-  --accent-hover: #f9bb4a;
+  --primary-color: #ff6b35;
+  --primary-hover: #e55a2b;
+  --secondary-color: #2c5530;
+  --secondary-hover: #3a6b40;
+  --success-color: #2c5530;
+  --success-hover: #3a6b40;
+  --warning-color: #f5d216;
+  --warning-hover: #e0c014;
+  --danger-color: #ff4444;
+  --danger-hover: #e63939;
+  --accent-color: #004e89;
+  --accent-hover: #006bb3;
   
-  --bg-primary: #fffaf2;
-  --bg-secondary: #fff5e4;
-  --bg-card: #fff5e4;
-  --bg-overlay: rgba(169, 140, 92, 0.1);
+  --bg-primary: #f7f3e9;
+  --bg-secondary: #ede6d3;
+  --bg-card: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.1);
   
-  --text-primary: #4c3f34;
-  --text-secondary: #a98c5c;
-  --text-muted: #c4a574;
-  --text-light: #fffaf2;
+  --text-primary: #2d2d2d;
+  --text-secondary: #404040;
+  --text-muted: #666666;
+  --text-light: #ffffff;
   
-  --border-color: #e5e7eb;
-  --border-radius: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-sm: 4px;
+  --border-color: #d4c5b9;
+  --border-radius: 4px;
+  --border-radius-lg: 6px;
+  --border-radius-sm: 2px;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: none;
+  --shadow-md: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 3px 3px 0px rgba(0, 0, 0, 0.3);
   
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -88,11 +88,12 @@ body {
 }
 
 .page-header {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  background: var(--accent-color);
   color: var(--text-light);
   /* further reduced header height */
   padding: calc(var(--spacing-sm) * 0.6) var(--spacing-xs) calc(var(--spacing-xs) * 0.6);
   position: relative;
+  border-bottom: 3px solid var(--primary-color);
 }
 
 .page-header h1,
@@ -112,18 +113,20 @@ body {
   position: absolute;
   left: calc(var(--spacing-xs));
   top: calc(var(--spacing-xs));
-  background: rgba(255, 255, 255, 0.14);
-  border: none;
-  color: var(--text-light);
+  background: var(--bg-card);
+  border: 2px solid var(--text-primary);
+  color: var(--text-primary);
   padding: calc(var(--spacing-xs) * 0.6);
-  border-radius: calc(var(--border-radius-sm) - 2px);
+  border-radius: var(--border-radius-sm);
   font-size: calc(var(--font-size-xs) + 1px);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-weight: bold;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--bg-secondary);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
 }
 
 .page-content {
@@ -174,25 +177,28 @@ body {
   color: var(--text-secondary);
 }
 
-/* Button Styles */
+/* Button Styles - Retro */
 .action-button {
   background: var(--primary-color);
   color: var(--text-light);
-  border: none;
+  border: 2px solid var(--text-primary);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
+  box-shadow: var(--shadow-md);
+  font-family: 'RainyHearts', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .action-button:hover {
   background: var(--primary-hover);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .action-button:disabled {
@@ -267,18 +273,19 @@ body {
 .form-input {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-sm);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--text-primary);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
-  background: var(--bg-primary);
+  background: var(--bg-card);
   color: var(--text-primary);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: 'RainyHearts', monospace;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
 }
 
 .form-input::placeholder {
@@ -295,14 +302,14 @@ body {
   flex: 1;
 }
 
-/* Card Styles */
+/* Card Styles - Retro */
 .info-card,
 .section-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  border: 3px solid var(--text-primary);
+  border-radius: var(--border-radius);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   margin-bottom: var(--spacing-md);
 }
 

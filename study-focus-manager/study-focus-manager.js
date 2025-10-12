@@ -21,7 +21,7 @@ export class StudyFocusManager {
 
   async loadGeminiApiKey() {
     try {
-      // Load from Chrome storage only
+      // First, try to load from Chrome storage
       const result = await chrome.storage.local.get(['geminiApiKey']);
       if (result.geminiApiKey) {
         this.geminiApiKey = result.geminiApiKey;
@@ -29,7 +29,22 @@ export class StudyFocusManager {
         return;
       }
       
-      console.warn('No API key found in Chrome storage. Please run setup.js to configure your API key.');
+      // If not in Chrome storage, try to load from config.json
+      try {
+        const response = await fetch(chrome.runtime.getURL('config.json'));
+        const config = await response.json();
+        if (config.geminiApiKey) {
+          this.geminiApiKey = config.geminiApiKey;
+          // Store it in Chrome storage for future use
+          await chrome.storage.local.set({ geminiApiKey: config.geminiApiKey });
+          console.log('API key loaded from config.json and stored in Chrome storage');
+          return;
+        }
+      } catch (configError) {
+        console.warn('Could not load from config.json:', configError.message);
+      }
+      
+      console.warn('No API key found in Chrome storage or config.json. Please configure your API key.');
       this.geminiApiKey = null;
       
     } catch (error) {

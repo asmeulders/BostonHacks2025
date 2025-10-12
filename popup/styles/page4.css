@@ -14,14 +14,14 @@ body,
 
 
 :root {
-    /* ---------- LIGHT PASTEL THEME ---------- */
-    --bg: #fffaf2;          /* warm off-white background */
-    --card: #fff5e4;        /* pale cream card area */
-    --muted: #a98c5c;       /* muted brown text */
-    --text: #4c3f34;        /* main dark brown text */
-    --accent: #ffcb69;      /* soft pastel yellow highlight */
-    --danger: #e07a5f;      /* muted coral-brown for delete */
-    --ring: rgba(255, 207, 102, 0.5); /* yellow focus ring */
+    /* ---------- RETRO SUNSET THEME ---------- */
+    --bg: #fffaf2;          /* warm off-white background (kept same) */
+    --card: #faf5ef;        /* light cream card area */
+    --muted: #55253f;       /* deep purple text */
+    --text: #020716;        /* very dark navy main text */
+    --accent: #ef9a5a;      /* warm orange highlight */
+    --danger: #a74d47;      /* muted red for delete */
+    --ring: rgba(239, 154, 90, 0.4); /* orange focus ring */
 }
 
 /* ---------- GLOBAL RESET ---------- */

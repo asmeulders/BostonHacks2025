@@ -33,5 +33,11 @@
         "mac": "Command+B"
       }
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["config.json", "teacher-config.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

@@ -6,15 +6,15 @@
   font-style: normal;
 }
 
-/* Page4 Theme Variables */
+/* Retro Sunset Theme Variables */
 :root {
   --bg: #fffaf2;
-  --card: #fff5e4;
-  --text: #4c3f34;
-  --muted: #a98c5c;
-  --accent: #ffcb69;
-  --danger: #e07a5f;
-  --success: #b8d4a4;
+  --card: #faf5ef;
+  --text: #020716;
+  --muted: #55253f;
+  --accent: #ef9a5a;
+  --danger: #a74d47;
+  --success: #55253f;
 }
 
 .timer-display {

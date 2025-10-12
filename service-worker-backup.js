@@ -1,8 +1,7 @@
-console.log('🔧 Pomodoro Service Worker with Study Teacher starting up...');
+console.log('🔧 Pomodoro Service Worker starting up...');
 
-// StudyFocusManager functionality (inline implementation)
+// StudyFocusManager functionality (inline to avoid import issues)
 let studyFocusManager = null;
-let geminiApiKey = null;
 
 // Pomodoro Timer State - ALL logic lives here
 let timerState = {
@@ -19,189 +18,6 @@ let timerState = {
 };
 
 const ALARM_NAME = 'pomodoroTimer';
-
-// Study Teacher Configuration
-const encouragingPhrases = [
-  "Great question! 🤔",
-  "I love your curiosity! 📚", 
-  "Let's explore this together! 🔍",
-  "Excellent thinking! 💡",
-  "That's a thoughtful question! 🎯",
-  "I can help you understand this! 🌟",
-  "Let's break this down step by step! 📝",
-  "Perfect topic to dive into! 🚀"
-];
-
-// Study session tracking
-let studySession = {
-  questionsAsked: 0,
-  subjects: [],
-  startTime: null
-};
-
-// Get random encouraging phrase
-function getEncouragingPhrase() {
-  return encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
-}
-
-// Enhanced prompt with session context for Study Teacher
-function buildTeacherPrompt(question) {
-  const sessionContext = studySession.questionsAsked > 0 
-    ? `\n\n📊 **SESSION CONTEXT:** This is question #${studySession.questionsAsked + 1} in our study session. Previous subjects covered: ${studySession.subjects.join(', ') || 'None yet'}.`
-    : '\n\n🎯 **SESSION START:** Welcome to our study session!';
-  
-  return `You are Professor StudyBot 🎓, an experienced and caring academic tutor specializing in helping students truly understand concepts.
-
-🎯 **YOUR MISSION:** Help students LEARN and UNDERSTAND, not just get answers.
-
-📖 **TEACHING APPROACH BY SUBJECT:**
-• **Math/Science:** Show step-by-step solutions, explain the "why" behind each step, use real-world applications
-• **Literature/Writing:** Ask about themes, guide analysis, help develop critical thinking
-• **History:** Connect events to causes/effects, relate to current events when relevant  
-• **Programming:** Explain logic flow, suggest debugging approaches, teach best practices
-• **Study Skills:** Provide proven techniques, time management, memory strategies
-
-💡 **RESPONSE FORMULA:**
-1. **Acknowledge:** Start with "${getEncouragingPhrase()}"
-2. **Teach:** Break down the concept step-by-step with clear explanations
-3. **Example:** Provide a relatable example or analogy when helpful
-4. **Engage:** End with a thought-provoking follow-up question to deepen learning
-5. **Encourage:** Remind them they're making progress
-
-🎪 **PERSONALITY TRAITS:**
-- Patient and never condescending 
-- Enthusiastic about learning
-- Uses analogies and real-world connections
-- Asks Socratic questions to guide discovery
-- Celebrates student insights and progress
-
-⚡ **SPECIAL RULES:**
-- For homework: Guide to solution, don't just give answers
-- For unclear questions: Ask clarifying questions
-- For off-topic questions: Gently redirect to academic topics
-- Keep responses focused (2-4 paragraphs) but thorough
-- Reference previous questions in the session when relevant
-
-${sessionContext}
-
-**Student's Question:** "${question}"
-
-Now help them learn! 🚀`;
-}
-
-// Load Gemini API key
-async function loadGeminiApiKey() {
-  try {
-    // First check Chrome storage
-    const storageResult = await chrome.storage.local.get(['geminiApiKey']);
-    if (storageResult.geminiApiKey) {
-      geminiApiKey = storageResult.geminiApiKey;
-      console.log('🔑 API key loaded from Chrome storage');
-      return;
-    }
-    
-    // Try to load from config.json
-    const response = await fetch(chrome.runtime.getURL('config.json'));
-    const config = await response.json();
-    
-    if (config.geminiApiKey && config.geminiApiKey.trim()) {
-      geminiApiKey = config.geminiApiKey.trim();
-      await chrome.storage.local.set({ geminiApiKey: geminiApiKey });
-      console.log('🔑 API key loaded from config.json and stored in Chrome storage');
-    } else {
-      console.warn('⚠️ No API key found in config.json - Gemini chat will not work');
-    }
-  } catch (error) {
-    console.error('❌ Error loading Gemini API key:', error);
-  }
-}
-
-// Ask Gemini AI a question with Study Teacher persona
-async function askGemini(question) {
-  if (!geminiApiKey) {
-    await loadGeminiApiKey();
-  }
-  
-  if (!geminiApiKey) {
-    return 'Gemini API key not configured. Please set it up first.';
-  }
-
-  console.log('🎓 Professor StudyBot is analyzing your question:', question);
-
-  try {
-    // Track study session progress
-    if (!studySession.startTime) {
-      studySession.startTime = Date.now();
-      console.log('📚 New study session started!');
-    }
-    studySession.questionsAsked++;
-
-    const requestBody = {
-      contents: [{
-        parts: [{
-          text: buildTeacherPrompt(question)
-        }]
-      }]
-    };
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    console.log('📡 Gemini API response status:', response.status);
-
-    const data = await response.json();
-    console.log('📄 Gemini API response received');
-    
-    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-      const answer = data.candidates[0].content.parts[0].text;
-      console.log('✅ Professor StudyBot provided an answer!');
-      return answer;
-    } else {
-      console.log('❌ No valid response found');
-      if (data.error) {
-        console.log('API Error:', data.error);
-        return `API Error: ${data.error.message || 'Unknown error'}`;
-      }
-      return 'Sorry, I couldn\'t generate a response.';
-    }
-  } catch (error) {
-    console.error('❌ Gemini API error:', error);
-    return 'Error connecting to AI service. Please try again.';
-  }
-}
-
-// Initialize study chat functionality
-async function initializeStudyFocusManager() {
-  try {
-    await loadGeminiApiKey();
-    studyFocusManager = true; // Just a flag to indicate it's ready
-    console.log('🤖 Study Teacher functionality initialized');
-  } catch (error) {
-    console.error('❌ Failed to initialize study teacher:', error);
-  }
-}
-
-// Handle study question requests
-async function handleStudyQuestion(question) {
-  console.log('🔄 handleStudyQuestion called with:', question);
-  try {
-    const result = await askGemini(question);
-    console.log('🔄 handleStudyQuestion returning answer');
-    return result;
-  } catch (error) {
-    console.error('🔄 handleStudyQuestion error:', error);
-    throw error;
-  }
-}
-
-// ===================
-// TIMER FUNCTIONALITY
-// ===================
 
 // Tab monitoring for distraction detection
 async function handleTabSwitch(tabId) {
@@ -302,6 +118,220 @@ async function initializeTimer() {
   }
 }
 
+// Gemini API functionality (inline implementation)
+let geminiApiKey = null;
+let teacherConfig = null;
+
+// Encouraging phrases for dynamic responses
+const encouragingPhrases = [
+  "Great question! 🤔",
+  "I love your curiosity! 📚", 
+  "Let's explore this together! 🔍",
+  "Excellent thinking! 💡",
+  "That's a thoughtful question! 🎯",
+  "I can help you understand this! 🌟",
+  "Let's break this down step by step! 📝",
+  "Perfect topic to dive into! 🚀"
+];
+
+// Get random encouraging phrase
+function getEncouragingPhrase() {
+  return encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+}
+
+// Track study session for context
+let studySession = {
+  questionsAsked: 0,
+  subjects: [],
+  startTime: null
+};
+
+// Enhanced prompt with session context
+function buildTeacherPrompt(question) {
+  const sessionContext = studySession.questionsAsked > 0 
+    ? `\n\n📊 **SESSION CONTEXT:** This is question #${studySession.questionsAsked + 1} in our study session. Previous subjects covered: ${studySession.subjects.join(', ') || 'None yet'}.`
+    : '\n\n🎯 **SESSION START:** Welcome to our study session!';
+  
+  return `You are Professor StudyBot 🎓, an experienced and caring academic tutor specializing in helping students truly understand concepts.
+
+🎯 **YOUR MISSION:** Help students LEARN and UNDERSTAND, not just get answers.
+
+📖 **TEACHING APPROACH BY SUBJECT:**
+• **Math/Science:** Show step-by-step solutions, explain the "why" behind each step, use real-world applications
+• **Literature/Writing:** Ask about themes, guide analysis, help develop critical thinking
+• **History:** Connect events to causes/effects, relate to current events when relevant  
+• **Programming:** Explain logic flow, suggest debugging approaches, teach best practices
+• **Study Skills:** Provide proven techniques, time management, memory strategies
+
+💡 **RESPONSE FORMULA:**
+1. **Acknowledge:** Start with "${getEncouragingPhrase()}"
+2. **Teach:** Break down the concept step-by-step with clear explanations
+3. **Example:** Provide a relatable example or analogy when helpful
+4. **Engage:** End with a thought-provoking follow-up question to deepen learning
+5. **Encourage:** Remind them they're making progress
+
+🎪 **PERSONALITY TRAITS:**
+- Patient and never condescending 
+- Enthusiastic about learning
+- Uses analogies and real-world connections
+- Asks Socratic questions to guide discovery
+- Celebrates student insights and progress
+
+⚡ **SPECIAL RULES:**
+- For homework: Guide to solution, don't just give answers
+- For unclear questions: Ask clarifying questions
+- For off-topic questions: Gently redirect to academic topics
+- Keep responses focused (2-4 paragraphs) but thorough
+- Reference previous questions in the session when relevant
+
+${sessionContext}
+
+**Student's Question:** "${question}"
+
+Now help them learn! 🚀`;
+}
+
+// Load Gemini API key
+async function loadGeminiApiKey() {
+  try {
+    // First check Chrome storage
+    const storageResult = await chrome.storage.local.get(['geminiApiKey']);
+    if (storageResult.geminiApiKey) {
+      geminiApiKey = storageResult.geminiApiKey;
+      console.log('🔑 API key loaded from Chrome storage');
+      return;
+    }
+    
+    // Try to load from config.json
+    const response = await fetch(chrome.runtime.getURL('config.json'));
+    const config = await response.json();
+    
+    if (config.geminiApiKey && config.geminiApiKey.trim()) {
+      geminiApiKey = config.geminiApiKey.trim();
+      await chrome.storage.local.set({ geminiApiKey: geminiApiKey });
+      console.log('🔑 API key loaded from config.json and stored in Chrome storage');
+    } else {
+      console.warn('⚠️ No API key found in config.json - Gemini chat will not work');
+    }
+  } catch (error) {
+    console.error('❌ Error loading Gemini API key:', error);
+  }
+}
+
+// Ask Gemini AI a question
+async function askGemini(question) {
+  if (!geminiApiKey) {
+    await loadGeminiApiKey();
+  }
+  
+  if (!geminiApiKey) {
+    return 'Gemini API key not configured. Please set it up first.';
+  }
+
+  console.log('🤖 Asking Gemini:', question);
+
+  try {
+    // Track study session progress
+    if (!studySession.startTime) {
+      studySession.startTime = Date.now();
+      console.log('📚 New study session started!');
+    }
+    studySession.questionsAsked++;
+
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: buildTeacherPrompt(question)
+
+📖 **TEACHING APPROACH BY SUBJECT:**
+• **Math/Science:** Show step-by-step solutions, explain the "why" behind each step, use real-world applications
+• **Literature/Writing:** Ask about themes, guide analysis, help develop critical thinking
+• **History:** Connect events to causes/effects, relate to current events when relevant  
+• **Programming:** Explain logic flow, suggest debugging approaches, teach best practices
+• **Study Skills:** Provide proven techniques, time management, memory strategies
+
+� **RESPONSE FORMULA:**
+1. **Acknowledge:** Start with encouragement ("Great question!" or "Let's explore this together!")
+2. **Teach:** Break down the concept step-by-step with clear explanations
+3. **Example:** Provide a relatable example or analogy when helpful
+4. **Engage:** End with a thought-provoking follow-up question to deepen learning
+5. **Encourage:** Remind them they're making progress
+
+🎪 **PERSONALITY TRAITS:**
+- Patient and never condescending 
+- Enthusiastic about learning
+- Uses analogies and real-world connections
+- Asks Socratic questions to guide discovery
+- Celebrates student insights and progress
+
+⚡ **SPECIAL RULES:**
+- For homework: Guide to solution, don't just give answers
+- For unclear questions: Ask clarifying questions
+- For off-topic questions: Gently redirect to academic topics
+- Keep responses focused (2-4 paragraphs) but thorough
+
+**Student's Question:** "${question}"
+
+Now help them learn! 🚀`
+        }]
+      }]
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('📡 Gemini API response status:', response.status);
+
+    const data = await response.json();
+    console.log('📄 Gemini API response data:', data);
+    
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const answer = data.candidates[0].content.parts[0].text;
+      console.log('✅ Gemini answer:', answer);
+      return answer;
+    } else {
+      console.log('❌ No valid response found');
+      if (data.error) {
+        console.log('API Error:', data.error);
+        return `API Error: ${data.error.message || 'Unknown error'}`;
+      }
+      return 'Sorry, I couldn\'t generate a response.';
+    }
+  } catch (error) {
+    console.error('❌ Gemini API error:', error);
+    return 'Error connecting to AI service. Please try again.';
+  }
+}
+
+// Initialize study chat functionality
+async function initializeStudyFocusManager() {
+  try {
+    await loadGeminiApiKey();
+    studyFocusManager = true; // Just a flag to indicate it's ready
+    console.log('🤖 Study chat functionality initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize study chat:', error);
+  }
+}
+
+// Handle study question requests
+async function handleStudyQuestion(question) {
+  console.log('🔄 handleStudyQuestion called with:', question);
+  try {
+    const result = await askGemini(question);
+    console.log('🔄 handleStudyQuestion returning:', result);
+    return result;
+  } catch (error) {
+    console.error('🔄 handleStudyQuestion error:', error);
+    throw error;
+  }
+}
+
 // Save timer state to storage
 async function saveTimerState() {
   try {
@@ -324,61 +354,54 @@ async function startSession(phase, duration) {
     startTime: now,
     endTime: now + (duration * 1000),
     duration: duration,
-    activeTabId: null // Reset tab tracking for new sessions
+    // Reset work tracking when starting new work session
+    workDomains: phase === 'work' ? [] : timerState.workDomains,
+    activeTabId: phase === 'work' ? null : timerState.activeTabId
   };
-
+  
+  console.log(`🎯 ${phase} session started - work domains reset:`, timerState.workDomains);
+  
   await saveTimerState();
   setupAlarm();
   broadcastStateUpdate();
 }
 
-// Setup alarm for timer completion
+// Setup chrome alarm for session completion
 function setupAlarm() {
   chrome.alarms.clear(ALARM_NAME);
-  
-  const alarmTime = new Date(timerState.endTime).getTime();
-  console.log(`⏰ Setting alarm for: ${new Date(alarmTime).toLocaleTimeString()}`);
-  
-  chrome.alarms.create(ALARM_NAME, { when: alarmTime });
+  chrome.alarms.create(ALARM_NAME, { when: timerState.endTime });
+  console.log(`⏰ Alarm set for ${new Date(timerState.endTime)}`);
 }
 
-// Broadcast state update to all listening popups
-function broadcastStateUpdate() {
-  const currentState = getCurrentState();
-  console.log('📡 Broadcasting state update:', currentState);
-  
-  // This will be caught by any open popup
-  chrome.runtime.sendMessage({
-    action: 'TIMER_STATE_UPDATE',
-    state: currentState
-  }).catch(() => {
-    // Silently ignore - no popup is open
-  });
-}
-
-// Complete the current session
+// Complete current session and start next phase automatically
 async function completeCurrentSession() {
-  console.log(`🎉 Session complete: ${timerState.phase}`);
+  console.log(`✅ ${timerState.phase} session complete!`);
   
   const completedPhase = timerState.phase;
+  const nextPhase = completedPhase === 'work' ? 'break' : 'work';
+  const nextDuration = nextPhase === 'work' ? timerState.workDuration : timerState.breakDuration;
   
-  // Update state
-  timerState.isRunning = false;
-  timerState.isPaused = false;
-  timerState.activeTabId = null;
-  timerState.workDomains = []; // Reset work domains
-  
-  await saveTimerState();
-  broadcastStateUpdate();
-  
-  // Show completion page
+  // Show completion notification tab
   await showCompletionTab(completedPhase);
+  
+  // Automatically start next phase
+  console.log(`🔄 Auto-starting ${nextPhase} session`);
+  await startSession(nextPhase, nextDuration);
 }
 
-// Show session completion tab
-async function showCompletionTab(phase) {
+// Show completion tab
+async function showCompletionTab(completedPhase) {
+  const messages = {
+    work: ['Great job! Time to recharge.', 'Nice focus session—grab some water!', 'You crushed it. Stretch time!'],
+    break: ['Break\'s over—let\'s dive back in!', 'Refreshed? Back to it!', 'You\'ve got this—time to focus.']
+  };
+  
+  const message = messages[completedPhase][Math.floor(Math.random() * messages[completedPhase].length)];
+  
   try {
-    const url = chrome.runtime.getURL('timer-complete.html') + `?phase=${phase}`;
+    const url = chrome.runtime.getURL('timer-complete.html') + 
+                `?phase=${completedPhase}&message=${encodeURIComponent(message)}`;
+    
     await chrome.tabs.create({ url: url });
     console.log('📄 Completion tab created');
   } catch (error) {
@@ -412,15 +435,23 @@ function getCurrentState() {
   
   return {
     ...timerState,
-    timeRemaining: timeRemaining
+    timeRemaining
   };
 }
 
-// ===================
-// MESSAGE HANDLERS
-// ===================
+// Broadcast state updates to popup (if open)
+function broadcastStateUpdate() {
+  const state = getCurrentState();
+  
+  chrome.runtime.sendMessage({
+    action: 'TIMER_STATE_UPDATE',
+    state: state
+  }).catch(() => {
+    // Popup might not be open, that's fine
+  });
+}
 
-// Handle alarms (timer completion)
+// Handle alarm events - this is where sessions complete automatically
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM_NAME) {
     console.log('⏰ Timer alarm triggered - completing session');
@@ -478,7 +509,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('🎯 Handling study question:', request.question);
     handleStudyQuestion(request.question)
       .then(answer => {
-        console.log('✅ Got answer from Professor StudyBot:', answer.substring(0, 100) + '...');
+        console.log('✅ Got answer from Gemini:', answer);
         sendResponse({ success: true, answer });
       })
       .catch(error => {
@@ -516,4 +547,4 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-console.log('✅ Pomodoro Service Worker with Professor StudyBot ready! 🎓');
+console.log('✅ Pomodoro Service Worker ready - timers will persist!');

@@ -141,6 +141,33 @@
       });
     }
 
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    function performGoogleSearch() {
+      const query = searchInput?.value?.trim();
+      if (query) {
+        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        chrome.tabs.create({ url: googleSearchUrl });
+      }
+    }
+    
+    // Search button click
+    if (searchBtn) {
+      searchBtn.addEventListener('click', performGoogleSearch);
+    }
+    
+    // Enter key on search input
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          performGoogleSearch();
+        }
+      });
+    }
+
     // Home key (keyboard) - also close the panel and show nav
     document.addEventListener('keydown', (e) => {
       // Use 'Home' key as requested — Windows/Chromium uses key === 'Home'
