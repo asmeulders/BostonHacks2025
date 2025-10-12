@@ -206,9 +206,9 @@ class PomodoroPopup {
       // Update start button text based on current phase
       if (startBtn) {
         if (this.currentState && this.currentState.phase === 'break') {
-          startBtn.textContent = '🚀 Start Work Session';
+          startBtn.textContent = 'Start Work Session';
         } else {
-          startBtn.textContent = '🚀 Start Focus Session';
+          startBtn.textContent = 'Start Focus Session';
         }
       }
     }

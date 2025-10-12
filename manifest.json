@@ -8,7 +8,7 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_icon": "images/hello_extensions.png"
+    "default_icon": "icons/sched_tasks.png"
   },
   "content_scripts": [
     {
