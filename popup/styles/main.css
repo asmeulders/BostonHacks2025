@@ -1,29 +1,37 @@
 /* Main shared styles for all popup pages */
 
-/* CSS Variables for consistent theming */
+/* Font face declaration for RainyHearts */
+@font-face {
+  font-family: 'RainyHearts';
+  src: url('../../fonts/rainyhearts.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* CSS Variables for consistent theming - Page4 Light Pastel Theme */
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #4338ca;
-  --secondary-color: #6b7280;
-  --secondary-hover: #4b5563;
-  --success-color: #10b981;
-  --success-hover: #059669;
-  --warning-color: #f59e0b;
-  --warning-hover: #d97706;
-  --danger-color: #ef4444;
-  --danger-hover: #dc2626;
-  --accent-color: #8b5cf6;
-  --accent-hover: #7c3aed;
+  --primary-color: #ffcb69;
+  --primary-hover: #f9bb4a;
+  --secondary-color: #a98c5c;
+  --secondary-hover: #8f7449;
+  --success-color: #b8d4a4;
+  --success-hover: #a2c488;
+  --warning-color: #f9e8b5;
+  --warning-hover: #f4df9a;
+  --danger-color: #e07a5f;
+  --danger-hover: #d6654a;
+  --accent-color: #ffcb69;
+  --accent-hover: #f9bb4a;
   
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-card: #ffffff;
-  --bg-overlay: rgba(0, 0, 0, 0.1);
+  --bg-primary: #fffaf2;
+  --bg-secondary: #fff5e4;
+  --bg-card: #fff5e4;
+  --bg-overlay: rgba(169, 140, 92, 0.1);
   
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --text-light: #ffffff;
+  --text-primary: #4c3f34;
+  --text-secondary: #a98c5c;
+  --text-muted: #c4a574;
+  --text-light: #fffaf2;
   
   --border-color: #e5e7eb;
   --border-radius: 8px;
@@ -59,7 +67,7 @@
 }
 
 html, body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'RainyHearts', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--text-primary);

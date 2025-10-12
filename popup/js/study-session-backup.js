@@ -188,11 +188,9 @@ class StudySessionManager {
     if (sessionInfo) {
       sessionInfo.innerHTML = `
         <span class="session-counter">
-          <span>📊</span>
           <span>Session ${this.sessionCount + 1}</span>
         </span>
         <span class="session-counter">
-          <span>🎯</span>
           <span>Today: ${this.getTodaySessionCount()}</span>
         </span>
       `;

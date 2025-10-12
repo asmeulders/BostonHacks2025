@@ -1,3 +1,22 @@
+/* Font face declaration for RainyHearts */
+@font-face {
+  font-family: 'RainyHearts';
+  src: url('../../fonts/rainyhearts.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Page4 Theme Variables */
+:root {
+  --bg: #fffaf2;
+  --card: #fff5e4;
+  --text: #4c3f34;
+  --muted: #a98c5c;
+  --accent: #ffcb69;
+  --danger: #e07a5f;
+  --success: #b8d4a4;
+}
+
 .timer-display {
   text-align: center;
   margin: 20px 0;
@@ -6,7 +25,7 @@
 .timer-text {
   font-size: 48px;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: 'RainyHearts', 'Courier New', monospace;
   margin: 10px 0;
 }
 
@@ -18,11 +37,11 @@
 }
 
 .session-work {
-  color: #d73502;
+  color: var(--danger);
 }
 
 .session-break {
-  color: #4CAF50;
+  color: var(--success);
 }
 
 .timer-controls {

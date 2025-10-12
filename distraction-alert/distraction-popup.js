@@ -24,7 +24,7 @@ function showDistractionAlert(domain) {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: Arial, sans-serif;
+      font-family: 'RainyHearts', Arial, sans-serif;
     ">
       <div style="
         background: white;

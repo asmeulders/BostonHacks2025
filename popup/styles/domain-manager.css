@@ -1,5 +1,13 @@
 /* Domain Manager specific styles */
 
+/* Font face declaration for RainyHearts */
+@font-face {
+  font-family: 'RainyHearts';
+  src: url('../../fonts/rainyhearts.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .domain-manager-container {
   padding: 0;
 }
@@ -23,7 +31,7 @@
 }
 
 .tab-url {
-  font-family: monospace;
+  font-family: 'RainyHearts', monospace;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   word-break: break-all;
@@ -106,7 +114,7 @@
 }
 
 .domain-name {
-  font-family: monospace;
+  font-family: 'RainyHearts', monospace;
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   flex: 1;
@@ -179,7 +187,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
-  font-family: monospace;
+  font-family: 'RainyHearts', monospace;
 }
 
 .domain-input:focus {
@@ -215,7 +223,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
   border-bottom: 1px solid var(--border-color);
-  font-family: monospace;
+  font-family: 'RainyHearts', monospace;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   transition: all 0.2s ease;

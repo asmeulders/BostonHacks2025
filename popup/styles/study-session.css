@@ -1,5 +1,13 @@
 /* Study Session specific styles */
 
+/* Font face declaration for RainyHearts */
+@font-face {
+  font-family: 'RainyHearts';
+  src: url('../../fonts/rainyhearts.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .study-session-container {
   padding: 0;
 }
@@ -22,7 +30,7 @@
 .timer-time {
   font-size: 3.5rem;
   font-weight: 300;
-  font-family: 'Monaco', 'Menlo', monospace;
+  font-family: 'RainyHearts', 'Monaco', 'Menlo', monospace;
   margin-bottom: var(--spacing-sm);
   letter-spacing: 0.05em;
 }

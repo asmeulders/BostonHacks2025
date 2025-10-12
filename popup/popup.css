@@ -1,11 +1,19 @@
+/* Font face declaration for RainyHearts */
+@font-face {
+    font-family: 'RainyHearts';
+    src: url('../fonts/rainyhearts.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
-    --bg: #fcfcfc;
-    --screen: #111827;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #60a5fa;
-    --card: #1f2937;
-    --card-hover: #374151;
+    --bg: #fffaf2;
+    --screen: #fff5e4;
+    --text: #4c3f34;
+    --muted: #a98c5c;
+    --accent: #ffcb69;
+    --card: #fff5e4;
+    --card-hover: #f9e8b5;
 
     /* fit the visible area inside the frame */
     --inset-top: 9.5%;
@@ -26,7 +34,7 @@ html, body {
     height: 500px;
     background: var(--bg);
     color: var(--text);
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'RainyHearts', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     display: flex;
     flex-direction: column;
 }
@@ -80,26 +88,29 @@ main {
     max-width: calc(33.33% - 16px);
     aspect-ratio: 1 / 1;
     border-radius: 20px;
-    background: rgba(0,0,0);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: white;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
-    transition: transform .1s ease, background .15s ease;
+    transition: transform .1s ease, background .15s ease, border .15s ease;
+    text-decoration: none;
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    background: rgba(255,255,255,0.14);
+    background: rgba(169, 140, 92, 0.1);
+    border: 1px solid var(--muted);
 }
 
 .btn:active {
     transform: translateY(0);
-    background: var(--accent);
+    background: rgba(169, 140, 92, 0.2);
+    border: 1px solid var(--accent);
     color: #fff;
 }
 
@@ -191,10 +202,11 @@ footer {
     transform: translateY(-50%);
     width: 28px;
     height: 28px;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 14px;
     background: transparent;
     cursor: pointer;
+    transition: background .15s ease, border .15s ease;
 }
 
 /* Draw the icon via pseudo-element so the button can stay empty and accessible */
@@ -205,6 +217,11 @@ footer {
     display: block;
     text-align: center;
     color: #9ca3af;
+}
+
+#searchBtn:hover {
+    background: rgba(169, 140, 92, 0.1);
+    border: 1px solid var(--muted);
 }
 
 #searchBtn:hover::before {

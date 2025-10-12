@@ -5,11 +5,18 @@
     <title>Page 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        @font-face {
+            font-family: 'RainyHearts';
+            src: url('../fonts/rainyhearts.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
         body {
             margin: 0;
-            background: transparent;
-            color: #e5e7eb;
-            font-family: system-ui, sans-serif;
+            background: #fffaf2;
+            color: #4c3f34;
+            font-family: 'RainyHearts', system-ui, sans-serif;
         }
         .wrap {
             padding: 16px;
@@ -19,17 +26,18 @@
             display: inline-block;
             margin-top: 12px;
             padding: 8px 14px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: #f9e8b5;
+            border: 1px solid #ffcb69;
             border-radius: 8px;
-            color: #e5e7eb;
+            color: #705d51;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
-            transition: background .15s ease;
+            transition: background .15s ease, transform .1s ease;
         }
         #backBtn:hover {
-            background: rgba(255,255,255,0.25);
+            background: #ffcb69;
+            transform: translateY(-1px);
         }
     </style>
 </head>
