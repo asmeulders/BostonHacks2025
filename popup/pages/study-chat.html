@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Study Chat</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <style>
+    #chat-container {
+      border: 1px solid var(--border-color);
+      height: 300px;
+      overflow-y: scroll;
+      padding: 12px;
+      margin: 16px 0;
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
+    .message {
+      margin: 8px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 80%;
+    }
+    .user-message {
+      background: var(--primary-color);
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+    .assistant-message {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+    }
+    #input-container {
+      display: flex;
+      gap: 8px;
+    }
+    #message-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+    #send-button {
+      padding: 8px 16px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+    }
+    #send-button:disabled {
+      background: var(--secondary-color);
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+        <a href="../popup.html">Back</a>
+      <h2>🤖 Study Chat</h2>
+    </header>
+    
+    <main class="page-content">
+      <div id="chat-container">
+        <div class="message assistant-message">
+          👋 Hi! I'm your study helper. Ask me anything about your work or studies!
+        </div>
+      </div>
+      
+      <div id="input-container">
+        <input type="text" id="message-input" placeholder="Ask a study question..." maxlength="500">
+        <button id="send-button">Send</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/shared/common.js"></script>
+  <script src="../js/study-chat.js"></script>
+</body>
+</html>
