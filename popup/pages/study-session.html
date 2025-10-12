@@ -39,6 +39,7 @@
       overflow-y: auto;
     }
   </style>
+  <link rel="stylesheet" href="../css/timer.css">
 </head>
 
 <body>
@@ -82,7 +83,7 @@
         <!-- Work Time Settings -->
         <div class="time-setting">
           <label for="workRange">Work Time: <span id="work-time">25</span> minutes</label>
-          <input type="range" min="10" max="60" value="25" class="time-slider" id="workRange">
+          <input type="range" min="1" max="60" value="25" class="time-slider" id="workRange">
         </div>
 
         <!-- Rest Time Settings -->
@@ -104,7 +105,7 @@
   </div>
 
   <script src="../js/shared/common.js"></script>
-  <script src="../js/study-session.js"></script>
+  <script src="../js/pomodoro-popup.js"></script>
 </body>
 
 </html>

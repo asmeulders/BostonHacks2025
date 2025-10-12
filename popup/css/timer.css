@@ -1,0 +1,128 @@
+.timer-display {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.timer-text {
+  font-size: 48px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  margin: 10px 0;
+}
+
+.session-type {
+  font-size: 18px;
+  margin: 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.session-work {
+  color: #d73502;
+}
+
+.session-break {
+  color: #4CAF50;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.timer-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  min-width: 100px;
+}
+
+.timer-btn:hover {
+  opacity: 0.8;
+}
+
+.timer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.start-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.pause-btn {
+  background-color: #ff9800;
+  color: white;
+}
+
+.stop-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.timer-settings {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+.timer-settings h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.setting-row label {
+  font-size: 14px;
+  color: #333;
+}
+
+.setting-row input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-running {
+  background-color: #4CAF50;
+  animation: pulse 2s infinite;
+}
+
+.status-paused {
+  background-color: #ff9800;
+}
+
+.status-stopped {
+  background-color: #666;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
