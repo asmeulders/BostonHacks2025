@@ -4,17 +4,100 @@ export class StudyFocusManager {
   constructor() {
     this.workDomains = new Set();
     this.lastActiveTabId = null;
+    this.geminiApiKey = null;
     this.init();
   }
 
   async init() {
     // Load existing work domains from storage
     await this.loadWorkDomains();
-
+    await this.loadGeminiApiKey();
+    
     // Set up event listeners
     this.setupEventListeners();
 
     console.log('Study Focus Assistant initialized');
+  }
+
+  async loadGeminiApiKey() {
+    try {
+      // Load from Chrome storage only
+      const result = await chrome.storage.local.get(['geminiApiKey']);
+      if (result.geminiApiKey) {
+        this.geminiApiKey = result.geminiApiKey;
+        console.log('API key loaded from Chrome storage');
+        return;
+      }
+      
+      console.warn('No API key found in Chrome storage. Please run setup.js to configure your API key.');
+      this.geminiApiKey = null;
+      
+    } catch (error) {
+      console.error('Error loading Gemini API key:', error);
+      this.geminiApiKey = null;
+    }
+  }
+
+  async askGemini(question) {
+    if (!this.geminiApiKey) {
+      return 'Gemini API key not configured. Please set it up first.';
+    }
+
+    console.log('=== GEMINI API DEBUG ===');
+    console.log('Question:', question);
+    console.log('API Key (first 10 chars):', this.geminiApiKey.substring(0, 10) + '...');
+
+    try {
+      const requestBody = {
+        contents: [{
+          parts: [{
+            text: `You are a helpful work/study assistant. Answer this work/study question clearly and concisely.
+                    If the question seems like a distraction or unrelated to working, steer the user back
+                    to work. Remember to be friendly and helpful.: ${question}`
+          }]
+        }]
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${this.geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers));
+
+      const data = await response.json();
+      console.log('Full API response:', JSON.stringify(data, null, 2));
+      
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        const answer = data.candidates[0].content.parts[0].text;
+        console.log('Extracted answer:', answer);
+        return answer;
+      } else {
+        console.log('No valid response found in candidates');
+        console.log('Available candidates:', data.candidates);
+        if (data.error) {
+          console.log('API Error:', data.error);
+          return `API Error: ${data.error.message || 'Unknown error'}`;
+        }
+        return 'Sorry, I couldn\'t generate a response.';
+      }
+    } catch (error) {
+      console.error('=== GEMINI API ERROR ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      return 'Error connecting to AI service. Please try again.';
+    }
+  }
+
+  async askStudyQuestion(question) {
+    return await this.askGemini(question);
   }
 
   setupEventListeners() {
@@ -32,11 +115,7 @@ export class StudyFocusManager {
       }
     });
 
-    // Listen for messages from content script and popup
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      this.handleMessage(message, sender, sendResponse);
-      return true; // Keep message channel open for async response
-    });
+    // Note: Message listener for chat is now handled in service-worker.js
   }
 
   //   toggleSession() {
@@ -65,11 +144,12 @@ export class StudyFocusManager {
         console.log('Mode is normal → no gating');
         return;
       }
-      if (!activeSession) {
-        console.log('No active session → no gating');
-        return;
-      }
-      // ---------------
+
+      // Only show distraction prompts if there's an active session
+      // if (!activeSession) {
+      //   console.log('No active session, skipping distraction check for:', tab.url);
+      //   return;
+      // }
 
       const domain = this.extractDomain(tab.url);
       const isWorkTab = this.isWorkDomain(domain);
