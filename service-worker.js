@@ -9,10 +9,84 @@ let timerState = {
   endTime: null,
   duration: 0,
   workDuration: 25 * 60, // 25 minutes in seconds
-  breakDuration: 5 * 60  // 5 minutes in seconds
+  breakDuration: 5 * 60,  // 5 minutes in seconds
+  workDomains: [],        // Domains designated as work-related
+  activeTabId: null       // Track active tab during work sessions
 };
 
 const ALARM_NAME = 'pomodoroTimer';
+
+// Tab monitoring for distraction detection
+async function handleTabSwitch(tabId) {
+  try {
+    // Only monitor during work sessions
+    if (!timerState.isRunning || timerState.phase !== 'work') {
+      return;
+    }
+
+    const tab = await chrome.tabs.get(tabId);
+    
+    // Skip internal Chrome pages
+    if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+      console.log('⏭️ Skipping internal page:', tab.url);
+      return;
+    }
+
+    const domain = getDomainFromUrl(tab.url);
+    console.log('🌐 Current domain:', domain);
+
+    // If this is the first tab during work session, designate as work domain
+    if (timerState.activeTabId === null) {
+      timerState.activeTabId = tabId;
+      timerState.workDomains.push(domain);
+      await saveTimerState();
+      console.log('🎯 Designated work domain:', domain);
+      return;
+    }
+
+    // Check if current domain is in work domains
+    if (!timerState.workDomains.includes(domain)) {
+      console.log('⚠️ Potential distraction detected:', domain);
+      await showDistractionAlert(tabId, domain);
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling tab switch:', error);
+  }
+}
+
+// Extract domain from URL
+function getDomainFromUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (error) {
+    console.error('❌ Error parsing URL:', url, error);
+    return '';
+  }
+}
+
+// Show distraction alert
+async function showDistractionAlert(tabId, domain) {
+  try {
+    console.log('🚨 Showing distraction alert for:', domain);
+    
+    // Inject content script to show alert
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['distraction-alert/distraction-content.js']
+    });
+
+    // Send message to show alert
+    await chrome.tabs.sendMessage(tabId, {
+      action: 'showDistractionAlert',
+      domain: domain
+    });
+
+  } catch (error) {
+    console.error('❌ Error showing distraction alert:', error);
+  }
+}
 
 // Initialize timer state from storage on startup
 async function initializeTimer() {
@@ -62,8 +136,13 @@ async function startSession(phase, duration) {
     phase: phase,
     startTime: now,
     endTime: now + (duration * 1000),
-    duration: duration
+    duration: duration,
+    // Reset work tracking when starting new work session
+    workDomains: phase === 'work' ? [] : timerState.workDomains,
+    activeTabId: phase === 'work' ? null : timerState.activeTabId
   };
+  
+  console.log(`🎯 ${phase} session started - work domains reset:`, timerState.workDomains);
   
   await saveTimerState();
   setupAlarm();
@@ -210,5 +289,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Initialize when service worker starts
 initializeTimer();
+
+// Set up tab monitoring for distraction detection
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  console.log('📑 Tab activated:', activeInfo.tabId);
+  await handleTabSwitch(activeInfo.tabId);
+});
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.active) {
+    console.log('📑 Tab updated and active:', tabId, tab.url);
+    await handleTabSwitch(tabId);
+  }
+});
 
 console.log('✅ Pomodoro Service Worker ready - timers will persist!');

@@ -63,39 +63,6 @@
             font-weight: bold;
             margin: 1rem 0;
         }
-        
-        .actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 25px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-        
-        button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .primary-btn {
-            background: rgba(255, 255, 255, 0.9);
-            color: #764ba2;
-        }
-        
-        .primary-btn:hover {
-            background: white;
-        }
     </style>
 </head>
 <body>
@@ -106,74 +73,9 @@
         
         <div class="phase-info">
             <div class="next-phase" id="nextPhase">Starting Break Session</div>
-            <div class="timer-display" id="nextTimer">5:00</div>
-        </div>
-        
-        <div class="actions">
-            <button class="primary-btn" onclick="returnToExtension()">Return to Extension</button>
-            <button onclick="closeTab()">Close Tab</button>
         </div>
     </div>
 
-    <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const completedPhase = urlParams.get('phase') || 'work';
-        const message = urlParams.get('message') || 'Session complete!';
-        
-        // Update the page content based on completed phase
-        const phaseIcon = document.getElementById('phaseIcon');
-        const title = document.getElementById('title');
-        const messageEl = document.getElementById('message');
-        const nextPhase = document.getElementById('nextPhase');
-        const nextTimer = document.getElementById('nextTimer');
-        
-        if (completedPhase === 'work') {
-            phaseIcon.textContent = '🎯';
-            title.textContent = 'Work Session Complete!';
-            nextPhase.textContent = 'Starting Break Session';
-            nextTimer.textContent = '5:00'; // Default break time
-        } else {
-            phaseIcon.textContent = '⏰';
-            title.textContent = 'Break Complete!';
-            nextPhase.textContent = 'Starting Work Session';
-            nextTimer.textContent = '25:00'; // Default work time
-        }
-        
-        messageEl.textContent = decodeURIComponent(message);
-        
-        // Auto-close after 10 seconds if user doesn't interact
-        let autoCloseTimer = setTimeout(() => {
-            closeTab();
-        }, 10000);
-        
-        // Cancel auto-close if user interacts with the page
-        document.addEventListener('click', () => {
-            clearTimeout(autoCloseTimer);
-        });
-        
-        function returnToExtension() {
-            // Open the extension popup if possible, otherwise just close
-            chrome.runtime.sendMessage({action: 'OPEN_POPUP'}, () => {
-                closeTab();
-            });
-        }
-        
-        function closeTab() {
-            window.close();
-        }
-        
-        // Add some animation on load
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('.container').style.opacity = '0';
-            document.querySelector('.container').style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                document.querySelector('.container').style.transition = 'all 0.5s ease';
-                document.querySelector('.container').style.opacity = '1';
-                document.querySelector('.container').style.transform = 'translateY(0)';
-            }, 100);
-        });
-    </script>
+    <script src="timer-complete.js"></script>
 </body>
 </html>
