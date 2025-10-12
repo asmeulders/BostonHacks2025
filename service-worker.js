@@ -587,9 +587,7 @@ async function startSession(phase, duration) {
     startTime: now,
     endTime: now + (duration * 1000),
     duration: duration,
-    // Reset work tracking when starting new work session
-    activeTabId: phase === 'work' ? null : timerState.activeTabId,
-    workDomains: phase === 'work' ? [] : timerState.workDomains
+    activeTabId: null // Reset tab tracking for new sessions
   };
 
   await saveTimerState();
@@ -629,17 +627,19 @@ async function completeCurrentSession() {
   
   const completedPhase = timerState.phase;
   
-  // Show completion notification tab
+  // Update state
+  timerState.isRunning = false;
+  timerState.isPaused = false;
+  timerState.activeTabId = null;
+  timerState.workDomains = []; // Reset work domains
+  
+  await saveTimerState();
+  broadcastStateUpdate();
+  
+  console.log('✅ Work session completed - distraction monitoring reset');
+  
+  // Show completion page
   await showCompletionTab(completedPhase);
-  
-  // Determine next phase and duration
-  const nextPhase = completedPhase === 'work' ? 'break' : 'work';
-  const nextDuration = nextPhase === 'work' ? timerState.workDuration : timerState.breakDuration;
-  
-  console.log(`🔄 Auto-starting ${nextPhase} session for ${nextDuration} seconds`);
-  
-  // Start the next session automatically
-  await startSession(nextPhase, nextDuration);
 }
 
 // Show session completion tab
