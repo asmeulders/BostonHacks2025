@@ -9,8 +9,7 @@
 <body>
   <div class="container">
     <header class="page-header">
-      <button class="back-button" onclick="window.location.href='../index.html'">← Back</button>
-      <h2>🌐 Domain Manager</h2>
+      <a href="../popup.html">Back</a>
     </header>
     
     <main class="page-content">
@@ -35,7 +34,7 @@
             placeholder="Enter domain (e.g., github.com)"
             class="domain-input"
           />
-          <button id="manualAdd" class="action-button secondary">
+          <button id="addDomain" class="action-button secondary">
             Add Domain
           </button>
         </div>
@@ -54,9 +53,6 @@
           <button id="clearAll" class="action-button danger">
             Clear All Domains
           </button>
-          <button id="exportDomains" class="action-button secondary">
-            Export List
-          </button>
         </div>
       </section>
       
@@ -68,11 +64,6 @@
             <span class="action-icon">🧪</span>
             <span class="action-label">Test Popup</span>
             <span class="action-desc">Trigger distraction alert</span>
-          </button>
-          <button id="bulkImport" class="quick-action-card">
-            <span class="action-icon">📥</span>
-            <span class="action-label">Bulk Import</span>
-            <span class="action-desc">Import domain list</span>
           </button>
         </div>
       </section>
