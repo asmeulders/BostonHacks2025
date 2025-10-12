@@ -18,13 +18,13 @@ function updatePageContent() {
         title.textContent = 'Work Session Complete!';
         messageEl.textContent = 'Excellent work! Time to take a well-deserved break.';
         nextPhase.textContent = 'It\'s Break Time! 🌟';
-        nextTimer.textContent = '5:00'; // Default break time
+        //nextTimer.textContent = '5:00'; // Default break time
     } else {
         phaseIcon.textContent = '⏰';
         title.textContent = 'Break Complete!';
         messageEl.textContent = 'Refreshed and ready? Let\'s get back to focused work!';
         nextPhase.textContent = 'Time to Work Again! 💪';
-        nextTimer.textContent = '25:00'; // Default work time
+        //nextTimer.textContent = '25:00'; // Default work time
     }
 }
 

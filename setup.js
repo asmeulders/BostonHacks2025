@@ -16,31 +16,31 @@ async function setupApiKey() {
 
     // Check if .env file exists and has API key
     const envPath = path.join(__dirname, '.env');
-    let existingKey = '';
+    // let existingKey = '';
     
-    if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf8');
-        const match = envContent.match(/GEMINI_API_KEY=(.+)/);
-        if (match && match[1]) {
-            existingKey = match[1];
-            console.log(`Found existing API key in .env: ${existingKey.substring(0, 10)}...`);
-        }
-    }
+    // if (fs.existsSync(envPath)) {
+    //     const envContent = fs.readFileSync(envPath, 'utf8');
+    //     const match = envContent.match(/GEMINI_API_KEY=(.+)/);
+    //     if (match && match[1]) {
+    //         existingKey = match[1];
+    //         console.log(`Found existing API key in .env: ${existingKey.substring(0, 10)}...`);
+    //     }
+    // }
 
-    const useExisting = existingKey && await new Promise(resolve => {
-        rl.question('Use existing API key from .env? (y/n): ', answer => {
-            resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-        });
-    });
+    // const useExisting = existingKey && await new Promise(resolve => {
+    //     rl.question('Use existing API key from .env? (y/n): ', answer => {
+    //         resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
+    //     });
+    // });
 
-    let apiKey;
-    if (useExisting) {
-        apiKey = existingKey;
-    } else {
-        apiKey = await new Promise(resolve => {
-            rl.question('Enter your Gemini API key: ', resolve);
-        });
-    }
+    // let apiKey;
+    // if (useExisting) {
+    //     apiKey = existingKey;
+    // } else {
+    //     apiKey = await new Promise(resolve => {
+    //         rl.question('Enter your Gemini API key: ', resolve);
+    //     });
+    // }
 
     if (apiKey.trim()) {
         // Update .env file
@@ -62,6 +62,19 @@ async function setupApiKey() {
         console.log('2. The extension will automatically load the API key from .env when running in development');
         console.log('3. For production, you\'ll need to configure the API key in the extension settings');
         console.log('📝 Note: The API key is now stored in .env and excluded from git for security.');
+        try {
+            // Store in Chrome storage
+            await chrome.storage.local.set({ geminiApiKey: apiKey });
+            console.log('✅ Gemini API key stored in Chrome storage successfully!');
+            
+            // Verify it's stored
+            const result = await chrome.storage.local.get(['geminiApiKey']);
+            console
+            console.log('🔍 Verification - API key in storage:', result.geminiApiKey ? 'Found' : 'Not found');
+            
+        } catch (error) {
+            console.error('❌ Error setting up API key:', error);
+        }
     } else {
         console.log('❌ No API key provided. Setup cancelled.');
     }

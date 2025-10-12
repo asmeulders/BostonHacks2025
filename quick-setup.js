@@ -2,7 +2,7 @@
 // Run this in the browser console when the extension is loaded
 
 (async function setupGeminiApiKey() {
-    const apiKey = "AIzaSyAIAGyd7H5xuRRhHvfHoLv9Qa1GbFBuNiM"; // Your current API key
+    const apiKey = "AIzaSyD2t2yOLWY3SFctMwH2cUtK5wBo3CB2d58"; // Your current API key
     
     try {
         // Store in Chrome storage
