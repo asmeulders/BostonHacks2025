@@ -332,6 +332,8 @@ async function startSession(phase, duration) {
   await saveTimerState();
   setupAlarm();
   broadcastStateUpdate();
+  
+  console.log(`🎯 ${phase === 'work' ? 'Work session started - distraction alerts enabled' : 'Break session started'}`);
 }
 
 // Setup alarm for timer completion
