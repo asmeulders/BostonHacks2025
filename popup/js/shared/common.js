@@ -462,7 +462,50 @@ class PopupUtils {
 class PageNavigation {
   static navigateTo(page) {
     if (page.startsWith('http')) {
+      try {
+        // If we're loaded inside an iframe, ask the parent to open the page in the panel iframe
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'openPanel', url: page }, '*');
+          return;
+        }
+
+        // If we're the popup root, try to open the url inside the panel iframe
+        const panel = document.getElementById('panel');
+        const nav = document.getElementById('nav');
+        if (panel && nav) {
+          panel.hidden = false;
+          panel.src = page;
+          nav.style.display = 'none';
+          return;
+        }
+      } catch (err) {
+        // fall back to opening a new window if anything goes wrong
+        console.error('navigateTo: failed to open in panel, falling back to new window', err);
+      }
+
       window.open(page, '_blank');
+    } else if (page.endsWith('.html')) {
+      try {
+        // If inside an iframe, ask parent to open internal page in panel
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'openPanel', url: page }, '*');
+          return;
+        }
+
+        const panel = document.getElementById('panel');
+        const nav = document.getElementById('nav');
+        if (panel && nav) {
+          panel.hidden = false;
+          panel.src = page;
+          nav.style.display = 'none';
+          return;
+        }
+      } catch (err) {
+        console.error('navigateTo: failed to open internal page in panel', err);
+      }
+
+      // fallback to normal navigation
+      window.location.href = page;
     } else {
       window.location.href = page;
     }
@@ -551,6 +594,26 @@ document.addEventListener('DOMContentLoaded', () => {
     PopupUtils.logError('Unhandled promise rejection:', event.reason);
     PopupUtils.showError('An unexpected error occurred.');
   });
+
+    // Listen for requests from pages loaded in the iframe
+    window.addEventListener('message', (e) => {
+        try {
+            // Only accept messages from our own extension pages
+            const isExt = typeof e.origin === 'string' && e.origin.startsWith('chrome-extension://');
+            if (!isExt) return;
+
+            if (e.data && e.data.type === 'closePanel') {
+                const grid  = document.getElementById('nav');
+                const panel = document.getElementById('panel');
+                if (!grid || !panel) return;
+
+                // Show grid, hide iframe
+                panel.hidden = true;
+                panel.src = 'about:blank';
+                grid.style.display = 'flex';
+            }
+        } catch {}
+    });
 });
 
 // Export utilities for use in other scripts

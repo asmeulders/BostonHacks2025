@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatContainer = document.getElementById('chat-container');
   const messageInput = document.getElementById('message-input');
   const sendButton = document.getElementById('send-button');
+  
+  // Auto-focus input field
+  messageInput.focus();
 
   function addMessage(text, isUser = false) {
     const messageDiv = document.createElement('div');
@@ -18,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add user message and reset input
     addMessage(message, true);
     messageInput.value = '';
+    messageInput.disabled = true;
     sendButton.disabled = true;
     sendButton.textContent = 'Thinking...';
 
@@ -27,13 +31,20 @@ document.addEventListener('DOMContentLoaded', function() {
         question: message
       });
 
-      addMessage(response?.success ? response.answer : 'Sorry, I couldn\'t process your question. Please try again.');
+      if (response?.success) {
+        addMessage(response.answer);
+      } else {
+        addMessage('Sorry, I couldn\'t process your question. Please try again.');
+      }
     } catch (error) {
+      console.error('Study chat error:', error);
       addMessage('Error connecting to study helper. Please try again.');
     }
 
+    messageInput.disabled = false;
     sendButton.disabled = false;
     sendButton.textContent = 'Send';
+    messageInput.focus();
   }
 
   // Event listeners

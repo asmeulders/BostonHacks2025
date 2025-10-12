@@ -5,56 +5,175 @@
   <title>Domain Manager</title>
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/domain-manager.css">
+  <style>
+    /* Make the page fill the iframe and layout with header/content stacked */
+    html, body, .container { width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0; padding: 0; }
+    .container { display: flex; flex-direction: column; }
+    .page-header { flex: 0 0 auto; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; min-height: 36px; }
+    .header-left { flex: 0 0 auto; margin-right: 8px; }
+    .header-center { flex: 1 1 auto; display:flex; justify-content:center; }
+    .header-center h2 { font-size: 15px; margin: 0; line-height: 1.2; }
+    .header-right { flex: 0 0 auto; }
+    .back-link { 
+      color: var(--text-light); 
+      text-decoration: none; 
+      font-size: 12px; 
+      background: rgba(255,255,255,0.08); 
+      padding: 4px 8px; 
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      line-height: 1;
+      margin: 4px;
+    }
+    .page-content { 
+      flex: 1 1 auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 16px; 
+      padding: 12px; 
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin; /* For Firefox */
+      scrollbar-color: var(--border-color) var(--bg-secondary); /* For Firefox */
+    }
+    /* Section styling */
+    section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    section h3 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+      color: var(--text-primary);
+    }
+    .help-text {
+      font-size: 12px;
+      color: var(--text-light);
+      margin: 8px 0 0 0;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .domain-input {
+      flex: 1;
+      min-width: 0; /* Allow input to shrink */
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--bg-card);
+    }
+    .action-button {
+      font-size: 13px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      min-width: 60px; /* Ensure minimum width for buttons */
+    }
+    /* Thin scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-light);
+    }
+    .current-tab-info {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 8px;
+      margin: 12px auto;
+      max-width: 400px;
+      text-align: left;
+    }
+    .domains-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 8px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <header class="page-header">
-      <a href="../popup.html">Back</a>
+      <div class="header-row">
+        <div class="header-left"><a class="back-link" href="../popup.html">Back</a></div>
+        <div class="header-center"><h2>🔒 Domain Manager</h2></div>
+        <div class="header-right"></div>
+      </div>
     </header>
     
     <main class="page-content">
-      <!-- Current Tab Function -->
-      <section class="current-tab-section">
-        <h3>Current Tab</h3>
-        <div id="currentTab" class="current-tab-info">
-          <!-- Current tab info populated by JS -->
+      <div style="display:flex; justify-content:center; align-items:flex-start; width:100%;">
+        <div style="width: 92%; max-width: 520px;">
+          <!-- Current Tab Function -->
+          <section class="current-tab-section">
+            <div style="text-align: center;">
+              <h3>Current Tab</h3>
+              <div id="currentTab" class="current-tab-info">
+                <!-- Current tab info populated by JS -->
+              </div>
+              <button id="addCurrentDomain" class="action-button primary" style="margin-top: 12px;">
+                Add Current Site as Work Domain
+              </button>
+            </div>
+          </section>
+          
+          <!-- Manual Domain Addition -->
+          <section class="manual-add-section">
+            <div style="text-align: center;">
+              <h3>Add Domain Manually</h3>
+              <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+                <input 
+                  type="text" 
+                  id="domainInput" 
+                  placeholder="Enter domain (e.g., google.com)"
+                  class="domain-input"
+                  style="min-width: 0;"
+                />
+                <button id="addDomain" class="action-button secondary" style="flex: 0 0 auto;">
+                  Add
+                </button>
+              </div>
+              <p class="help-text">
+                Add domains that you use for work or study
+              </p>
+            </div>
+          </section>
+          
+          <!-- Work Domains List -->
+          <section class="domains-list-section">
+            <div style="text-align: center;">
+              <h3>Work Domains</h3>
+              <div id="workDomains" class="domains-list" style="max-width: 400px; margin: 0 auto; text-align: left;">
+                <!-- Domains list populated by JS -->
+              </div>
+              <div class="domain-actions" style="margin-top: 16px;">
+                <button id="clearAll" class="action-button danger">
+                  Clear All Domains
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
-        <button id="addCurrentDomain" class="action-button primary">
-          Add Current Site as Work Domain
-        </button>
-      </section>
-      
-      <!-- Manual Domain Addition -->
-      <section class="manual-add-section">
-        <h3>Add Domain Manually</h3>
-        <div class="input-group">
-          <input 
-            type="text" 
-            id="domainInput" 
-            placeholder="Enter domain (e.g., github.com)"
-            class="domain-input"
-          />
-          <button id="addDomain" class="action-button secondary">
-            Add Domain
-          </button>
-        </div>
-        <p class="help-text">
-          Add domains that you use for work or study
-        </p>
-      </section>
-      
-      <!-- Work Domains List -->
-      <section class="domains-list-section">
-        <h3>Work Domains</h3>
-        <div id="workDomains" class="domains-list">
-          <!-- Domains list populated by JS -->
-        </div>
-        <div class="domain-actions">
-          <button id="clearAll" class="action-button danger">
-            Clear All Domains
-          </button>
-        </div>
-      </section>
+      </div>
     </main>
     
     <!-- Status Messages -->

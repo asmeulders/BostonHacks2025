@@ -1,40 +1,56 @@
+<!-- popup.html -->
 <!DOCTYPE html>
-<html>
+<html lang="">
 <head>
-  <meta charset="utf-8">
-  <title>Study Focus</title>
-  <link rel="stylesheet" href="styles/main.css">
+    <meta charset="utf-8">
+    <title>Study Focus</title>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
-    <header class="page-header">
-      <h1>🎯 Study Focus</h1>
-      <p class="page-subtitle">Your productivity companion</p>
-    </header>
-    
-    <main class="page-content">
-      <div class="nav-grid">
-        <a href="pages/domain-manager.html" class="nav-card">
-          <span class="nav-icon">🌐</span>
-          <h3 class="nav-title">Domain Manager</h3>
-          <p class="nav-description">Manage your work websites</p>
-        </a>
-        
-        <a href="pages/study-session.html" class="nav-card">
-          <span class="nav-icon">🍅</span>
-          <h3 class="nav-title">Study Sessions</h3>
-          <p class="nav-description">Pomodoro timer & tracking</p>
-        </a>
-        
-        <a href="pages/study-chat.html" class="nav-card">
-          <span class="nav-icon">🤖</span>
-          <h3 class="nav-title">Study Chat</h3>
-          <p class="nav-description">AI study helper</p>
-        </a>
-      </div>      
-    </main>
-  </div>
-  
-  <script src="js/shared/common.js"></script>
+<main>
+    <div class="screen">
+        <!-- grid of app buttons -->
+        <div class="grid" id="nav">
+            <a href="pages/domain-manager.html" class="btn" id="button_0" data-view="page1">
+                <img src="../icons/note_icon.png" alt="Notes" class="btn-icon">
+                fuCK
+            </a>
+
+            <a href="pages/study-session.html" class="btn" id="button_1" data-view="page2">
+                <img src="../icons/note_icon.png" alt="Notes" class="btn-icon">
+            </a>
+
+            <a href="pages/study-chat.html" class="btn" id="button_2" data-view="page3">
+                <img src="../icons/note_icon.png" alt="Notes" class="btn-icon">
+            </a>
+
+            <div class="btn" id="button_3" data-view="page4">
+                <img src="../icons/note_icon.png" alt="Notes" class="btn-icon">
+            </div>
+            <div class="btn" id="button_4" data-view="page5">Page 5</div>
+            <div class="btn" id="button_5" data-view="page6">Page 6</div>
+            <div class="btn" id="button_6" data-view="page7">Page 7</div>
+            <div class="btn" id="button_7" data-view="page8">Page 8</div>
+            <div class="btn" id="button_8" data-view="page9">Page 9</div>
+
+            <!-- search bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search..." />
+                <button id="searchBtn" aria-label="Search"></button>
+            </div>
+        </div>
+
+        <!-- iframe that loads internal pages -->
+        <iframe id="panel" class="panel" hidden title="panel"></iframe>
+    </div>
+</main>
+<!-- home button (image behind frame) -->
+<div id="home_0">
+    <img src="images/palmOs_home.png" alt="Home" class="home-icon">
+</div>
+
+<script src="js/shared/common.js"></script>
+<script src="js/popup-root.js"></script>
+<!-- popup.js missing in repo; popup-root handles panel messaging -->
 </body>
 </html>

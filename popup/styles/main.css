@@ -82,13 +82,14 @@ body {
 .page-header {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: var(--text-light);
-  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+  /* further reduced header height */
+  padding: calc(var(--spacing-sm) * 0.6) var(--spacing-xs) calc(var(--spacing-xs) * 0.6);
   position: relative;
 }
 
 .page-header h1,
 .page-header h2 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-base);
   font-weight: 600;
   margin-bottom: var(--spacing-xs);
 }
@@ -101,14 +102,14 @@ body {
 
 .back-button {
   position: absolute;
-  left: var(--spacing-md);
-  top: var(--spacing-md);
-  background: rgba(255, 255, 255, 0.2);
+  left: calc(var(--spacing-xs));
+  top: calc(var(--spacing-xs));
+  background: rgba(255, 255, 255, 0.14);
   border: none;
   color: var(--text-light);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-sm);
+  padding: calc(var(--spacing-xs) * 0.6);
+  border-radius: calc(var(--border-radius-sm) - 2px);
+  font-size: calc(var(--font-size-xs) + 1px);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }

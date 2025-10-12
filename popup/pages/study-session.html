@@ -6,15 +6,54 @@
   <title>Study Sessions</title>
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/study-session.css">
+  <style>
+    /* Make the page fill the iframe and layout with header/content stacked */
+    html, body, .container { width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0; padding: 0; }
+    .container { display: flex; flex-direction: column; }
+    .page-header { flex: 0 0 auto; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; min-height: 36px; }
+    .header-left { flex: 0 0 auto; margin-right: 8px; }
+    .header-center { flex: 1 1 auto; display:flex; justify-content:center; }
+    .header-center h2 { font-size: 15px; margin: 0; line-height: 1.2; }
+    .header-right { flex: 0 0 auto; }
+    .back-link { 
+      color: var(--text-light); 
+      text-decoration: none; 
+      font-size: 12px; 
+      background: rgba(255,255,255,0.08); 
+      padding: 4px 8px; 
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      line-height: 1;
+      margin: 4px;
+    }
+    .page-content { 
+      flex: 1 1 auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+      padding: 12px; 
+      min-height: 0;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 
 <body>
   <div class="container">
     <header class="page-header">
-      <a href="../popup.html">Back</a>
+      <div class="header-row">
+        <div class="header-left"><a class="back-link" href="../popup.html">Back</a></div>
+        <div class="header-center"><h2>⏱️ Study Session</h2></div>
+        <div class="header-right"></div>
+      </div>
     </header>
 
     <main class="page-content">
+      <div style="display:flex; justify-content:center; align-items:flex-start; width:100%;">
+        <div style="width: 92%; max-width: 520px;">
       <!-- Active Session Display -->
       <section class="active-session-section" id="activeSessionSection" style="display: none;">
         <div class="session-timer">
@@ -59,6 +98,8 @@
           </button>
         </div>
       </section>
+        </div>
+      </div>
     </main>
   </div>
 
