@@ -13,8 +13,12 @@
   },
   "content_scripts": [
     {
-      "js": ["distraction-alert/distraction-content.js"],
-      "matches": ["<all_urls>"]
+      "js": [
+        "distraction-alert/distraction-content.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "permissions": [
@@ -22,7 +26,8 @@
     "activeTab",
     "storage",
     "scripting",
-    "alarms"
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"

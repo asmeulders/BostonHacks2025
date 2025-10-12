@@ -275,6 +275,16 @@ class StudySessionManager {
     this.currentSession = null;
     this.timeRemaining = 0;
 
+    const iconUrl = chrome.runtime.getURL('../../images/icon128.png');
+
+    //chrome notification
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl,
+      title: 'Focus Session Ended',
+      message: 'Your focus session has been ended.'
+    });
+
     await chrome.storage.local.set({ activeSession: false });
     await this.persistSession(); // writes null currentSession, keeps last phase value
     this.updateUI();
@@ -405,11 +415,11 @@ class StudySessionManager {
 
   showNotification(title, message) {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, { body: message, icon: '../images/hello_extensions.png' });
+      new Notification(title, { body: message, icon: '../../images/hello_extensions.png' });
     } else if ('Notification' in window && Notification.permission !== 'denied') {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
-          new Notification(title, { body: message, icon: '../images/hello_extensions.png' });
+          new Notification(title, { body: message, icon: '../../images/hello_extensions.png' });
         }
       });
     }
