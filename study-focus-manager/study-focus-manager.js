@@ -10,10 +10,10 @@ export class StudyFocusManager {
   async init() {
     // Load existing work domains from storage
     await this.loadWorkDomains();
-    
+
     // Set up event listeners
     this.setupEventListeners();
-    
+
     console.log('Study Focus Assistant initialized');
   }
 
@@ -39,49 +39,49 @@ export class StudyFocusManager {
     });
   }
 
-//   toggleSession() {
-//     this.activeSession = !this.activeSession;
-//     console.log(`Session active: ${this.activeSession}`)
-//     return 
-//   }
+  //   toggleSession() {
+  //     this.activeSession = !this.activeSession;
+  //     console.log(`Session active: ${this.activeSession}`)
+  //     return 
+  //   }
 
   async handleTabSwitch(tabId) {
     try {
       const tab = await chrome.tabs.get(tabId);
 
-      // Check if extension is enabled
-      const { extensionEnabled, activeSession } = await chrome.storage.local.get(['extensionEnabled', 'activeSession']);
-      
-      // Skip if extension is disabled or if it's a chrome internal page
-      if (extensionEnabled === false || !tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-        if (extensionEnabled === false) {
-          console.log('Extension is disabled, skipping tab switch handling');
-        } else {
-          console.log('Skipping chrome internal page:', tab.url);
-        }
-        return;
-      }
+      // ---- guards ----
+      const { extensionEnabled, activeSession, mode } =
+        await chrome.storage.local.get(['extensionEnabled', 'activeSession', 'mode']);
 
-      // Only show distraction prompts if there's an active session
-      if (!activeSession) {
-        console.log('No active session, skipping distraction check for:', tab.url);
+      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+        console.log('Skipping internal page:', tab.url);
         return;
       }
+      if (extensionEnabled === false) {
+        console.log('Extension disabled → no gating');
+        return;
+      }
+      if (mode === 'normal') {
+        console.log('Mode is normal → no gating');
+        return;
+      }
+      if (!activeSession) {
+        console.log('No active session → no gating');
+        return;
+      }
+      // ---------------
 
       const domain = this.extractDomain(tab.url);
       const isWorkTab = this.isWorkDomain(domain);
 
-      console.log(`Tab switch detected - Domain: ${domain}, Is Work Tab: ${isWorkTab}, Work Domains:`, Array.from(this.workDomains));
+      console.log(`Tab switch - domain: ${domain}, isWork: ${isWorkTab}`);
 
-      // Store the current tab info
       this.lastActiveTabId = tabId;
 
       if (!isWorkTab) {
-        console.log(`Showing distraction prompt for non-work domain: ${domain}`);
-        // This is a non-work tab, show distraction prompt
         await this.showDistractionPrompt(tabId, domain);
       } else {
-        console.log(`${domain} is a work domain, no prompt needed`);
+        console.log(`${domain} is a work domain, no prompt.`);
       }
 
     } catch (error) {
@@ -89,19 +89,20 @@ export class StudyFocusManager {
     }
   }
 
+
   async showDistractionPrompt(tabId, domain) {
     try {
       console.log(`Attempting to inject script into tab ${tabId} for domain ${domain}`);
-      
+
       // Wait a moment for the page to be ready
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Inject the distraction alert script into the current tab
       await chrome.scripting.executeScript({
         target: { tabId: tabId },
         files: ['distraction-alert/distraction-popup.js']
       });
-      
+
       // Then call the function
       await chrome.scripting.executeScript({
         target: { tabId: tabId },
@@ -112,11 +113,11 @@ export class StudyFocusManager {
         },
         args: [domain]
       });
-      
+
       console.log(`Successfully injected distraction prompt for ${domain}`);
     } catch (error) {
       console.error('Error showing distraction prompt:', error);
-      
+
       // Fallback: try to use content script messaging
       try {
         await chrome.tabs.sendMessage(tabId, {
