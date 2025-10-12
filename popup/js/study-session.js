@@ -284,7 +284,7 @@ class StudySessionManager {
     } catch (err) { /* no-op */ }
   }
 
-  // When a single phase finishes → auto-queue the next phase + message
+  // When a single phase finishes → open new tab and auto-queue the next phase
   async completeSession() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
@@ -302,8 +302,16 @@ class StudySessionManager {
       msg = pick(this.restCompleteMsgs);
     }
 
-    if (this.settings.notifications) {
-      this.showNotification(title, msg);
+    // Open new tab instead of notification
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'OPEN_SESSION_COMPLETE_TAB',
+        phase: this.phase,
+        message: msg,
+        title: title
+      });
+    } catch (err) {
+      console.log('Could not open session complete tab:', err);
     }
 
     // Clear finished session but KEEP activeSession true (we're chaining)
