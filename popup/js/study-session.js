@@ -1,4 +1,6 @@
 // Study Session JavaScript functionality — wall-clock based, survives popup close
+// Now alternates Work ↔ Rest with random phase-complete messages
+// Enforces a minimum work duration of 10 seconds
 
 class StudySessionManager {
   constructor() {
@@ -9,12 +11,32 @@ class StudySessionManager {
     this.timeRemaining = 0;     // seconds
     this.sessionType = 'pomodoro';
 
+    // Work/Rest phase tracking
+    this.phase = 'work'; // 'work' | 'rest'
+
+    // Fun messages
+    this.workCompleteMsgs = [
+      "Great job! Time to recharge.",
+      "Nice focus session—grab some water!",
+      "You crushed it. Stretch time!",
+      "Deep breath—enjoy a short break.",
+    ];
+    this.restCompleteMsgs = [
+      "Break’s over—let’s dive back in!",
+      "Refreshed? Back to it!",
+      "You’ve got this—time to focus.",
+      "Small steps, big wins—let’s go!",
+    ];
+
     this.settings = {
-      pomodoro: 25 * 60,  // 25 minutes
-      shortBreak: 5 * 60, // 5 minutes
-      longBreak: 15 * 60, // 15 minutes
+      pomodoro: 25 * 60,  // work (seconds)
+      shortBreak: 5 * 60, // rest (seconds)
+      longBreak: 15 * 60, // unused for now
       notifications: true
     };
+
+    // NEW: minimum work duration
+    this.MIN_WORK_SECONDS = 10;
 
     this.init();
   }
@@ -32,6 +54,10 @@ class StudySessionManager {
         if (changes.currentSession) {
           this.currentSession = changes.currentSession.newValue || null;
           this.refreshStateFromWallClock();
+        }
+        if (changes.phase) {
+          this.phase = changes.phase.newValue || 'work';
+          this.updateUI();
         }
       });
     } catch (error) {
@@ -61,7 +87,9 @@ class StudySessionManager {
 
   async loadSessionData() {
     try {
-      const data = await chrome.storage.local.get(['currentSession']);
+      const data = await chrome.storage.local.get(['currentSession', 'phase']);
+      if (data.phase) this.phase = data.phase;
+
       if (data.currentSession) {
         this.currentSession = data.currentSession;
         this.sessionType = this.currentSession.type;
@@ -76,7 +104,7 @@ class StudySessionManager {
 
   async persistSession() {
     try {
-      await chrome.storage.local.set({ currentSession: this.currentSession });
+      await chrome.storage.local.set({ currentSession: this.currentSession, phase: this.phase });
     } catch (error) {
       console.error('Failed to save session data:', error);
     }
@@ -123,8 +151,6 @@ class StudySessionManager {
     if (endSessionBtn) {
       endSessionBtn.addEventListener('click', () => this.stopTimer());
     }
-
-    // Quick Start cards were removed from HTML — no listeners needed
   }
 
   // --- Wall clock core -------------------------------------------------------
@@ -156,7 +182,7 @@ class StudySessionManager {
     this.timeRemaining = Math.ceil(remainingMs / 1000);
 
     if (this.timeRemaining <= 0) {
-      this.completeSession(); // will clean up and notify
+      this.completeSession(); // will chain to next phase
       return;
     }
 
@@ -173,8 +199,12 @@ class StudySessionManager {
   // --- Session lifecycle -----------------------------------------------------
 
   async startSession(type, durationSeconds) {
-    if (this.isRunning) return;
+    // Ensure minimum duration for work/custom timers
+    if (type === 'pomodoro' || type === 'custom') {
+      durationSeconds = Math.max(this.MIN_WORK_SECONDS, durationSeconds);
+    }
 
+    // type: 'pomodoro' (work) or 'shortBreak' (rest) or 'custom'
     const now = Date.now();
     const endTime = now + durationSeconds * 1000;
 
@@ -184,13 +214,13 @@ class StudySessionManager {
       endTime,              // wall-clock end
       duration: durationSeconds,
       paused: false
-      // pausedAt: undefined
     };
 
     this.isRunning = true;
     this.isPaused = false;
 
-    await chrome.storage.local.set({ activeSession: true }); // signal background
+    // Keep the overall study "active" across phases
+    await chrome.storage.local.set({ activeSession: true });
     await this.persistSession();
     this.startUITimer();
     this.updateUI();
@@ -202,19 +232,42 @@ class StudySessionManager {
         sessionType: type,
         duration: durationSeconds
       });
-    } catch (err) {
-      // non-fatal
-    }
+    } catch (err) { /* no-op */ }
+  }
+
+  // helpers for durations & phases
+  getWorkDuration() {
+    // Enforce minimum on read as well
+    return Math.max(this.MIN_WORK_SECONDS, this.settings.pomodoro);
+  }
+  getRestDuration() { return this.settings.shortBreak; }
+
+  async startWork() {
+    this.phase = 'work';
+    await this.persistSession(); // writes phase
+    await this.startSession('pomodoro', this.getWorkDuration());
+  }
+
+  async startRest() {
+    this.phase = 'rest';
+    await this.persistSession(); // writes phase
+    await this.startSession('shortBreak', this.getRestDuration());
   }
 
   startCustomSession() {
+    // start a Work phase based on the current slider, clamped to minimum
     const workSlider = document.getElementById('workRange');
-    const duration = workSlider ? parseInt(workSlider.value, 10) * 60 : this.settings.pomodoro;
-    this.startSession('custom', duration);
+    if (workSlider) {
+      const minutes = parseInt(workSlider.value, 10);
+      this.settings.pomodoro = Math.max(this.MIN_WORK_SECONDS, minutes * 60);
+    } else {
+      this.settings.pomodoro = Math.max(this.MIN_WORK_SECONDS, this.settings.pomodoro);
+    }
+    this.startWork();
   }
 
   async stopTimer() {
-    // terminate session
+    // terminate the whole loop
     this.isRunning = false;
     this.isPaused = false;
     if (this.timer) clearInterval(this.timer);
@@ -223,31 +276,47 @@ class StudySessionManager {
     this.timeRemaining = 0;
 
     await chrome.storage.local.set({ activeSession: false });
-    await this.persistSession(); // writes null
+    await this.persistSession(); // writes null currentSession, keeps last phase value
     this.updateUI();
 
     try {
       await chrome.runtime.sendMessage({ action: 'SESSION_ENDED' });
-    } catch (err) {
-      // ignore
-    }
+    } catch (err) { /* no-op */ }
   }
 
+  // When a single phase finishes → auto-queue the next phase + message
   async completeSession() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.isRunning = false;
     this.isPaused = false;
 
-    chrome.storage.local.set({ activeSession: false });
-
-    if (this.settings.notifications) {
-      this.showNotification('Session Complete!', this.getSessionCompleteMessage(this.sessionType));
+    // Choose a message by phase
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    let title, msg;
+    if (this.phase === 'work') {
+      title = 'Focus Session Complete!';
+      msg = pick(this.workCompleteMsgs);
+    } else {
+      title = 'Rest Complete!';
+      msg = pick(this.restCompleteMsgs);
     }
 
+    if (this.settings.notifications) {
+      this.showNotification(title, msg);
+    }
+
+    // Clear finished session but KEEP activeSession true (we're chaining)
     this.currentSession = null;
     await this.persistSession();
     this.updateUI();
+
+    // Chain to next phase immediately
+    if (this.phase === 'work') {
+      await this.startRest();
+    } else {
+      await this.startWork();
+    }
   }
 
   // --- Pause/Resume ----------------------------------------------------------
@@ -263,7 +332,7 @@ class StudySessionManager {
   }
 
   async resumeTimer() {
-    if (!this.currentSession || !this.isPaused) return;
+    if (!this.currentSession || this.isRunning || !this.isPaused) return;
     const delta = Date.now() - (this.currentSession.pausedAt || Date.now());
     this.currentSession.endTime += delta; // shift end time forward by pause duration
     this.currentSession.paused = false;
@@ -280,11 +349,8 @@ class StudySessionManager {
   }
 
   togglePause() {
-    if (this.isRunning && !this.isPaused) {
-      this.pauseTimer();
-    } else if (this.isPaused) {
-      this.resumeTimer();
-    }
+    if (this.isRunning && !this.isPaused) this.pauseTimer();
+    else if (this.isPaused) this.resumeTimer();
   }
 
   // --- UI helpers ------------------------------------------------------------
@@ -300,12 +366,16 @@ class StudySessionManager {
     const progressFill = document.getElementById('progressFill');
 
     if (timerDisplay) {
-      const time = (this.currentSession ? this.timeRemaining : this.settings.pomodoro);
+      const fallback = (this.phase === 'rest') ? this.getRestDuration() : this.getWorkDuration();
+      const time = (this.currentSession ? this.timeRemaining : fallback);
       timerDisplay.textContent = this.formatTime(time);
     }
 
     if (sessionTypeDisplay) {
-      sessionTypeDisplay.textContent = this.getSessionTypeLabel(this.sessionType);
+      // Show explicit label by phase
+      sessionTypeDisplay.textContent = (this.phase === 'rest')
+        ? '☕ Rest Time'
+        : '🍅 Focus Session';
     }
 
     if (progressFill && this.currentSession) {
@@ -350,29 +420,8 @@ class StudySessionManager {
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
-
-  getSessionTypeLabel(type) {
-    const labels = {
-      pomodoro: '🍅 Focus',
-      shortBreak: '☕ Break',
-      longBreak: '🌴 Long Break',
-      custom: '⚡ Custom'
-    };
-    return labels[type] || type;
-  }
-
-  getSessionCompleteMessage(type) {
-    const messages = {
-      pomodoro: 'Great work! Time for a break.',
-      shortBreak: 'Break complete! Ready for another session?',
-      longBreak: 'Long break finished! You\'re doing great!',
-      custom: 'Custom session complete!'
-    };
-    return messages[type] || 'Session complete!';
-  }
 }
 
-// Initialize study session manager when page loads
 document.addEventListener('DOMContentLoaded', () => {
   const mgr = new StudySessionManager();
   window.studySessionManager = mgr; // expose for debugging

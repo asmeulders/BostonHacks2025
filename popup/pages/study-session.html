@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>Study Sessions</title>
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/study-session.css">
 </head>
+
 <body>
   <div class="container">
     <header class="page-header">
       <a href="../popup.html">Back</a>
     </header>
-    
+
     <main class="page-content">
       <!-- Active Session Display -->
       <section class="active-session-section" id="activeSessionSection" style="display: none;">
@@ -33,46 +35,23 @@
           </div>
         </div>
       </section>
-      
+
       <!-- Session Starter -->
       <section class="session-starter-section" id="sessionStarterSection">
         <h3>Start New Session</h3>
-        
+
         <!-- Work Time Settings -->
         <div class="time-setting">
           <label for="workRange">Work Time: <span id="work-time">25</span> minutes</label>
           <input type="range" min="10" max="60" value="25" class="time-slider" id="workRange">
         </div>
-        
+
         <!-- Rest Time Settings -->
         <div class="time-setting">
           <label for="restRange">Break Time: <span id="rest-time">5</span> minutes</label>
           <input type="range" min="1" max="15" value="5" class="time-slider" id="restRange">
         </div>
-        
-        <!-- Session Type Selection -->
-        <div class="session-types">
-          <h4>Quick Start</h4>
-          <div class="session-type-grid">
-            <button class="session-type-card" data-duration="15">
-              <span class="duration">15min</span>
-              <span class="type-label">Quick Focus</span>
-            </button>
-            <button class="session-type-card" data-duration="25">
-              <span class="duration">25min</span>
-              <span class="type-label">Pomodoro</span>
-            </button>
-            <button class="session-type-card" data-duration="45">
-              <span class="duration">45min</span>
-              <span class="type-label">Deep Work</span>
-            </button>
-            <button class="session-type-card" data-duration="60">
-              <span class="duration">60min</span>
-              <span class="type-label">Extended</span>
-            </button>
-          </div>
-        </div>
-        
+
         <!-- Custom Session Controls -->
         <div class="custom-session">
           <button id="startTimer" class="action-button primary large">
@@ -82,8 +61,9 @@
       </section>
     </main>
   </div>
-  
+
   <script src="../js/shared/common.js"></script>
   <script src="../js/study-session.js"></script>
 </body>
+
 </html>
