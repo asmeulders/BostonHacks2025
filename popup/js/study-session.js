@@ -1,29 +1,39 @@
-// Study Session JavaScript functionality - Simplified
+// Study Session JavaScript functionality — wall-clock based, survives popup close
 
 class StudySessionManager {
   constructor() {
-    this.currentSession = null;
-    this.timer = null;
+    this.currentSession = null; // { type, startTime, endTime, duration, paused, pausedAt? }
+    this.timer = null;          // UI repaint interval only
     this.isRunning = false;
     this.isPaused = false;
-    this.timeRemaining = 0;
+    this.timeRemaining = 0;     // seconds
     this.sessionType = 'pomodoro';
+
     this.settings = {
-      pomodoro: 25 * 60, // 25 minutes
+      pomodoro: 25 * 60,  // 25 minutes
       shortBreak: 5 * 60, // 5 minutes
       longBreak: 15 * 60, // 15 minutes
       notifications: true
     };
-    
+
     this.init();
   }
 
   async init() {
     try {
       await this.loadSettings();
-      await this.loadSessionData();
+      await this.loadSessionData();   // reconstruct state from storage
       this.setupEventListeners();
       this.updateUI();
+
+      // Keep UI in sync if another context changes currentSession
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local') return;
+        if (changes.currentSession) {
+          this.currentSession = changes.currentSession.newValue || null;
+          this.refreshStateFromWallClock();
+        }
+      });
     } catch (error) {
       console.error('Failed to initialize study session manager:', error);
     }
@@ -52,22 +62,21 @@ class StudySessionManager {
   async loadSessionData() {
     try {
       const data = await chrome.storage.local.get(['currentSession']);
-      
       if (data.currentSession) {
         this.currentSession = data.currentSession;
         this.sessionType = this.currentSession.type;
-        this.timeRemaining = this.currentSession.timeRemaining;
+        // derive flags & remaining from wall clock
+        this.refreshStateFromWallClock();
+        if (this.currentSession) this.startUITimer();
       }
     } catch (error) {
       console.error('Failed to load session data:', error);
     }
   }
 
-  async saveSessionData() {
+  async persistSession() {
     try {
-      await chrome.storage.local.set({
-        currentSession: this.currentSession
-      });
+      await chrome.storage.local.set({ currentSession: this.currentSession });
     } catch (error) {
       console.error('Failed to save session data:', error);
     }
@@ -84,7 +93,7 @@ class StudySessionManager {
       workTime.textContent = workSlider.value;
       workSlider.addEventListener('input', (event) => {
         workTime.textContent = event.target.value;
-        this.settings.pomodoro = parseInt(event.target.value) * 60;
+        this.settings.pomodoro = parseInt(event.target.value, 10) * 60;
         this.saveSettings();
       });
     }
@@ -93,38 +102,192 @@ class StudySessionManager {
       restTime.textContent = restSlider.value;
       restSlider.addEventListener('input', (event) => {
         restTime.textContent = event.target.value;
-        this.settings.shortBreak = parseInt(event.target.value) * 60;
+        this.settings.shortBreak = parseInt(event.target.value, 10) * 60;
         this.saveSettings();
       });
     }
 
-    // Custom session start button
-    const startCustomSessionBtn = document.getElementById('startCustomSession');
-    if (startCustomSessionBtn) {
-      startCustomSessionBtn.addEventListener('click', () => this.startCustomSession());
+    // Start button (HTML id is "startTimer")
+    const startBtn = document.getElementById('startTimer');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => this.startCustomSession());
     }
 
     // Session controls
     const pauseSessionBtn = document.getElementById('pauseSession');
     const endSessionBtn = document.getElementById('endSession');
-    
+
     if (pauseSessionBtn) {
-      pauseSessionBtn.addEventListener('click', () => this.pauseSession());
+      pauseSessionBtn.addEventListener('click', () => this.togglePause());
     }
-    
     if (endSessionBtn) {
-      endSessionBtn.addEventListener('click', () => this.endSession());
+      endSessionBtn.addEventListener('click', () => this.stopTimer());
     }
 
-    // Session type selection (quick start cards)
-    const sessionTypes = document.querySelectorAll('.session-type-card');
-    sessionTypes.forEach(card => {
-      card.addEventListener('click', () => {
-        const duration = parseInt(card.dataset.duration);
-        this.startQuickSession(duration);
-      });
-    });
+    // Quick Start cards were removed from HTML — no listeners needed
   }
+
+  // --- Wall clock core -------------------------------------------------------
+
+  refreshStateFromWallClock() {
+    if (!this.currentSession) {
+      this.isRunning = false;
+      this.isPaused = false;
+      this.timeRemaining = 0;
+      this.updateUI();
+      return;
+    }
+
+    const s = this.currentSession;
+    this.sessionType = s.type;
+
+    let remainingMs;
+    if (s.paused) {
+      // freeze remaining time at pause moment
+      remainingMs = Math.max(0, s.endTime - (s.pausedAt || Date.now()));
+      this.isPaused = true;
+      this.isRunning = false;
+    } else {
+      remainingMs = Math.max(0, s.endTime - Date.now());
+      this.isPaused = false;
+      this.isRunning = remainingMs > 0;
+    }
+
+    this.timeRemaining = Math.ceil(remainingMs / 1000);
+
+    if (this.timeRemaining <= 0) {
+      this.completeSession(); // will clean up and notify
+      return;
+    }
+
+    this.updateUI();
+  }
+
+  startUITimer() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      this.refreshStateFromWallClock();
+    }, 1000);
+  }
+
+  // --- Session lifecycle -----------------------------------------------------
+
+  async startSession(type, durationSeconds) {
+    if (this.isRunning) return;
+
+    const now = Date.now();
+    const endTime = now + durationSeconds * 1000;
+
+    this.currentSession = {
+      type,
+      startTime: now,
+      endTime,              // wall-clock end
+      duration: durationSeconds,
+      paused: false
+      // pausedAt: undefined
+    };
+
+    this.isRunning = true;
+    this.isPaused = false;
+
+    await chrome.storage.local.set({ activeSession: true }); // signal background
+    await this.persistSession();
+    this.startUITimer();
+    this.updateUI();
+
+    // (Optional) notify background
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'SESSION_STARTED',
+        sessionType: type,
+        duration: durationSeconds
+      });
+    } catch (err) {
+      // non-fatal
+    }
+  }
+
+  startCustomSession() {
+    const workSlider = document.getElementById('workRange');
+    const duration = workSlider ? parseInt(workSlider.value, 10) * 60 : this.settings.pomodoro;
+    this.startSession('custom', duration);
+  }
+
+  async stopTimer() {
+    // terminate session
+    this.isRunning = false;
+    this.isPaused = false;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.currentSession = null;
+    this.timeRemaining = 0;
+
+    await chrome.storage.local.set({ activeSession: false });
+    await this.persistSession(); // writes null
+    this.updateUI();
+
+    try {
+      await chrome.runtime.sendMessage({ action: 'SESSION_ENDED' });
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  async completeSession() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.isRunning = false;
+    this.isPaused = false;
+
+    chrome.storage.local.set({ activeSession: false });
+
+    if (this.settings.notifications) {
+      this.showNotification('Session Complete!', this.getSessionCompleteMessage(this.sessionType));
+    }
+
+    this.currentSession = null;
+    await this.persistSession();
+    this.updateUI();
+  }
+
+  // --- Pause/Resume ----------------------------------------------------------
+
+  async pauseTimer() {
+    if (!this.currentSession || !this.isRunning || this.isPaused) return;
+    this.isPaused = true;
+    this.isRunning = false;
+    this.currentSession.paused = true;
+    this.currentSession.pausedAt = Date.now();
+    await this.persistSession();
+    this.updateSessionControls();
+  }
+
+  async resumeTimer() {
+    if (!this.currentSession || !this.isPaused) return;
+    const delta = Date.now() - (this.currentSession.pausedAt || Date.now());
+    this.currentSession.endTime += delta; // shift end time forward by pause duration
+    this.currentSession.paused = false;
+    delete this.currentSession.pausedAt;
+
+    this.isPaused = false;
+    this.isRunning = true;
+    await this.persistSession();
+    this.startUITimer();
+    this.updateTimerDisplay();
+
+    const pauseBtn = document.getElementById('pauseSession');
+    if (pauseBtn) pauseBtn.innerHTML = '⏸️ Pause';
+  }
+
+  togglePause() {
+    if (this.isRunning && !this.isPaused) {
+      this.pauseTimer();
+    } else if (this.isPaused) {
+      this.resumeTimer();
+    }
+  }
+
+  // --- UI helpers ------------------------------------------------------------
 
   updateUI() {
     this.updateTimerDisplay();
@@ -137,7 +300,7 @@ class StudySessionManager {
     const progressFill = document.getElementById('progressFill');
 
     if (timerDisplay) {
-      const time = this.isRunning || this.isPaused ? this.timeRemaining : this.settings.pomodoro;
+      const time = (this.currentSession ? this.timeRemaining : this.settings.pomodoro);
       timerDisplay.textContent = this.formatTime(time);
     }
 
@@ -146,8 +309,11 @@ class StudySessionManager {
     }
 
     if (progressFill && this.currentSession) {
-      const progress = ((this.currentSession.duration - this.timeRemaining) / this.currentSession.duration) * 100;
-      progressFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+      const elapsed = this.currentSession.duration - this.timeRemaining;
+      const pct = (elapsed / this.currentSession.duration) * 100;
+      progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    } else if (progressFill) {
+      progressFill.style.width = '0%';
     }
   }
 
@@ -156,128 +322,24 @@ class StudySessionManager {
     const starterSection = document.getElementById('sessionStarterSection');
     const pauseBtn = document.getElementById('pauseSession');
 
-    if (this.isRunning || this.isPaused) {
+    const showActive = !!this.currentSession && (this.isRunning || this.isPaused);
+    if (showActive) {
       if (activeSection) activeSection.style.display = 'block';
       if (starterSection) starterSection.style.display = 'none';
-      
-      if (pauseBtn) {
-        pauseBtn.innerHTML = this.isPaused ? '▶️ Resume' : '⏸️ Pause';
-      }
+      if (pauseBtn) pauseBtn.innerHTML = this.isPaused ? '▶️ Resume' : '⏸️ Pause';
     } else {
       if (activeSection) activeSection.style.display = 'none';
       if (starterSection) starterSection.style.display = 'block';
     }
   }
 
-  async startSession(type, duration) {
-    if (this.isRunning) {
-      return;
-    }
-
-    this.currentSession = {
-      type: type,
-      startTime: Date.now(),
-      duration: duration,
-      timeRemaining: duration
-    };
-
-    this.timeRemaining = duration;
-    this.sessionType = type;
-    this.isRunning = true;
-    this.isPaused = false;
-
-    await this.saveSessionData();
-    this.startTimer();
-    this.updateUI();
-
-    // Notify background script
-    try {
-      await chrome.runtime.sendMessage({
-        action: 'SESSION_STARTED',
-        sessionType: type,
-        duration: duration
-      });
-    } catch (error) {
-      console.error('Failed to notify background script:', error);
-    }
-  }
-
-  startTimer() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-
-    this.timer = setInterval(() => {
-      if (this.timeRemaining > 0) {
-        this.timeRemaining--;
-        this.currentSession.timeRemaining = this.timeRemaining;
-        this.updateTimerDisplay();
-        this.saveSessionData();
-      } else {
-        this.completeSession();
-      }
-    }, 1000);
-  }
-
-  pauseTimer() {
-    if (this.isRunning && !this.isPaused) {
-      this.isPaused = true;
-      this.isRunning = false;
-      clearInterval(this.timer);
-      this.updateSessionControls();
-      this.saveSessionData();
-    }
-  }
-
-  async stopTimer() {
-    this.isRunning = false;
-    this.isPaused = false;
-    clearInterval(this.timer);
-    this.currentSession = null;
-    this.timeRemaining = 0;
-    
-    await this.saveSessionData();
-    this.updateUI();
-
-    // Notify background script
-    try {
-      await chrome.runtime.sendMessage({
-        action: 'SESSION_ENDED'
-      });
-    } catch (error) {
-      console.error('Failed to notify background script:', error);
-    }
-  }
-
-  completeSession() {
-    clearInterval(this.timer);
-    this.isRunning = false;
-    this.isPaused = false;
-
-    // Show completion notification
-    if (this.settings.notifications) {
-      this.showNotification('Session Complete!', this.getSessionCompleteMessage(this.sessionType));
-    }
-
-    this.currentSession = null;
-    this.updateUI();
-    this.saveSessionData();
-  }
-
   showNotification(title, message) {
-    // Simple browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, {
-        body: message,
-        icon: '../images/hello_extensions.png'
-      });
+      new Notification(title, { body: message, icon: '../images/hello_extensions.png' });
     } else if ('Notification' in window && Notification.permission !== 'denied') {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
-          new Notification(title, {
-            body: message,
-            icon: '../images/hello_extensions.png'
-          });
+          new Notification(title, { body: message, icon: '../images/hello_extensions.png' });
         }
       });
     }
@@ -308,55 +370,10 @@ class StudySessionManager {
     };
     return messages[type] || 'Session complete!';
   }
-
-  // New methods for connecting timer functionality
-  startCustomSession() {
-    const workSlider = document.getElementById('workRange');
-    const duration = workSlider ? parseInt(workSlider.value) * 60 : this.settings.pomodoro;
-    this.startSession('custom', duration);
-  }
-
-  startQuickSession(durationMinutes) {
-    const duration = durationMinutes * 60;
-    this.startSession('pomodoro', duration);
-  }
-
-  pauseSession() {
-    if (this.isRunning && !this.isPaused) {
-      this.pauseTimer();
-    } else if (this.isPaused) {
-      this.resumeTimer();
-    }
-  }
-
-  endSession() {
-    if (this.isRunning || this.isPaused) {
-      this.stopTimer();
-    }
-  }
-
-  resumeTimer() {
-    if (this.isPaused && this.currentSession) {
-      this.isPaused = false;
-      this.isRunning = true;
-      this.startTimer();
-      this.updateTimerDisplay();
-      
-      // Update pause button
-      const pauseBtn = document.getElementById('pauseSession');
-      if (pauseBtn) {
-        pauseBtn.innerHTML = '⏸️ Pause';
-      }
-    }
-  }
 }
 
 // Initialize study session manager when page loads
-let studySessionManager;
-
 document.addEventListener('DOMContentLoaded', () => {
-  studySessionManager = new StudySessionManager();
+  const mgr = new StudySessionManager();
+  window.studySessionManager = mgr; // expose for debugging
 });
-
-// Export for global access
-window.studySessionManager = studySessionManager;

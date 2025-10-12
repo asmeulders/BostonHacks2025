@@ -57,12 +57,6 @@ class DomainManager {
       addCurrentBtn.addEventListener('click', () => this.addCurrentDomain());
     }
 
-    // Refresh tab info button
-    const refreshBtn = document.getElementById('refreshTabInfo');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => this.refreshTabInfo());
-    }
-
     // Manual domain input
     const domainInput = document.getElementById('domainInput');
     const addBtn = document.getElementById('addDomain');
@@ -84,29 +78,26 @@ class DomainManager {
     if (clearAllBtn) {
       clearAllBtn.addEventListener('click', () => this.clearAllDomains());
     }
-  
 
-    // Search functionality
-    const searchInput = document.getElementById('domainSearch');
-    if (searchInput) {
-      searchInput.addEventListener('input', PopupUtils.debounce(() => {
-        this.filterDomains(searchInput.value);
-      }, 300));
-    }
+    document.getElementById("workDomains").addEventListener("click", (event) => {
+      if (event.target.closest(".domain-remove")) {
+        const item = event.target.closest(".domain-item");
+        if (item) {
+          const domain = item.dataset.domain;
+          console.log("Removing domain:", domain);
 
-    // Filter tabs
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    filterTabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        this.setActiveFilter(e.target.dataset.filter);
-      });
+          // Remove from UI
+          item.remove();
+
+          this.removeDomain(domain);
+        }
+      }
     });
   }
 
   updateUI() {
     this.updateCurrentTabDisplay();
     this.updateDomainsList();
-    this.updateStatistics();
   }
 
   updateCurrentTabDisplay() {
@@ -162,10 +153,7 @@ class DomainManager {
       <div class="domain-item" data-domain="${domain}">
         <span class="domain-name">${domain}</span>
         <div class="domain-actions">
-          <button class="domain-edit" onclick="domainManager.editDomain(${index})" title="Edit domain">
-            ✏️
-          </button>
-          <button class="domain-remove" onclick="domainManager.removeDomain(${index})" title="Remove domain">
+          <button class="domain-remove" title="Remove domain">
             🗑️
           </button>
         </div>
@@ -173,25 +161,6 @@ class DomainManager {
     `).join('');
 
     domainsList.innerHTML = domainsHTML;
-  }
-
-  updateStatistics() {
-    const statsContainer = document.getElementById('domainStats');
-    if (!statsContainer) return;
-
-    const totalDomains = this.workDomains.length;
-    const currentDomainStatus = this.getCurrentDomainStatus();
-    
-    statsContainer.innerHTML = `
-      <div class="stat-card">
-        <span class="stat-number">${totalDomains}</span>
-        <span class="stat-label">Work Domains</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-number">${currentDomainStatus.emoji}</span>
-        <span class="stat-label">${currentDomainStatus.label}</span>
-      </div>
-    `;
   }
 
   getCurrentDomainStatus() {
@@ -315,14 +284,14 @@ class DomainManager {
     }
   }
 
-  async removeDomain(index) {
-    if (index < 0 || index >= this.workDomains.length) return;
+  async removeDomain(domain) {
+    console.log(`Attempting to remove ${domain}...`);
+    const index = this.workDomains.indexOf(domain);
 
-    const domain = this.workDomains[index];
-    
     if (confirm(`Remove "${domain}" from work domains?`)) {
       try {
         this.workDomains.splice(index, 1);
+        console.log(`Work domains: ${this.workDomains}`)
         await this.saveWorkDomains();
         
         // Notify background script
@@ -337,54 +306,8 @@ class DomainManager {
         PopupUtils.logError('Failed to remove domain:', error);
         PopupUtils.showError('Failed to remove domain. Please try again.');
       }
-    }
-  }
-
-  async editDomain(index) {
-    if (index < 0 || index >= this.workDomains.length) return;
-
-    const currentDomain = this.workDomains[index];
-    const newDomain = prompt(`Edit domain:`, currentDomain);
-    
-    if (newDomain === null) return; // User cancelled
-    
-    const trimmedDomain = newDomain.trim().toLowerCase();
-    
-    if (!trimmedDomain) {
-      PopupUtils.showError('Domain cannot be empty');
-      return;
-    }
-
-    if (!PopupUtils.isValidDomain(trimmedDomain)) {
-      PopupUtils.showError('Please enter a valid domain format');
-      return;
-    }
-
-    if (trimmedDomain !== currentDomain && this.workDomains.includes(trimmedDomain)) {
-      PopupUtils.showError('Domain already exists in work domains');
-      return;
-    }
-
-    if (trimmedDomain === currentDomain) {
-      return; // No change
-    }
-
-    try {
-      this.workDomains[index] = trimmedDomain;
-      await this.saveWorkDomains();
-      
-      // Notify background script
-      await PopupUtils.sendMessage({
-        type: 'DOMAIN_UPDATED',
-        oldDomain: currentDomain,
-        newDomain: trimmedDomain
-      });
-
-      PopupUtils.showSuccess(`Updated domain to "${trimmedDomain}"`);
-      this.updateUI();
-    } catch (error) {
-      PopupUtils.logError('Failed to edit domain:', error);
-      PopupUtils.showError('Failed to update domain. Please try again.');
+    } else {
+      console.log("Declined to remove ${domain}");
     }
   }
 
@@ -411,126 +334,6 @@ class DomainManager {
         PopupUtils.showError('Failed to clear domains. Please try again.');
       }
     }
-  }
-
-  async refreshTabInfo() {
-    try {
-      await this.loadCurrentTab();
-      this.updateCurrentTabDisplay();
-      PopupUtils.showSuccess('Tab information refreshed');
-    } catch (error) {
-      PopupUtils.logError('Failed to refresh tab info:', error);
-      PopupUtils.showError('Failed to refresh tab information');
-    }
-  }
-
-  exportDomains() {
-    const exportData = {
-      version: '1.0',
-      exportDate: new Date().toISOString(),
-      workDomains: this.workDomains,
-      totalCount: this.workDomains.length
-    };
-
-    const filename = `study-focus-domains-${new Date().toISOString().split('T')[0]}.json`;
-    PopupUtils.downloadJSON(exportData, filename);
-    PopupUtils.showSuccess('Domains exported successfully');
-  }
-
-  async importDomains(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      const content = await PopupUtils.readFileAsText(file);
-      const importData = JSON.parse(content);
-      
-      if (!importData.workDomains || !Array.isArray(importData.workDomains)) {
-        throw new Error('Invalid file format');
-      }
-
-      const validDomains = importData.workDomains.filter(domain => 
-        typeof domain === 'string' && PopupUtils.isValidDomain(domain)
-      );
-
-      if (validDomains.length === 0) {
-        PopupUtils.showError('No valid domains found in import file');
-        return;
-      }
-
-      // Merge with existing domains
-      const newDomains = validDomains.filter(domain => !this.workDomains.includes(domain));
-      
-      if (newDomains.length === 0) {
-        PopupUtils.showWarning('All domains from import file already exist');
-        return;
-      }
-
-      this.workDomains.push(...newDomains);
-      await this.saveWorkDomains();
-      
-      // Notify background script
-      await PopupUtils.sendMessage({
-        type: 'DOMAINS_IMPORTED',
-        domains: newDomains
-      });
-
-      PopupUtils.showSuccess(`Imported ${newDomains.length} new domains`);
-      this.updateUI();
-    } catch (error) {
-      PopupUtils.logError('Failed to import domains:', error);
-      PopupUtils.showError('Failed to import domains. Please check the file format.');
-    } finally {
-      event.target.value = ''; // Reset file input
-    }
-  }
-
-  filterDomains(searchTerm) {
-    const domainItems = document.querySelectorAll('.domain-item');
-    const normalizedSearch = searchTerm.toLowerCase().trim();
-
-    domainItems.forEach(item => {
-      const domain = item.dataset.domain.toLowerCase();
-      const matches = domain.includes(normalizedSearch);
-      item.style.display = matches ? 'flex' : 'none';
-    });
-
-    // Update results count
-    const visibleCount = Array.from(domainItems).filter(item => 
-      item.style.display !== 'none'
-    ).length;
-    
-    this.updateSearchResults(visibleCount, this.workDomains.length);
-  }
-
-  updateSearchResults(visibleCount, totalCount) {
-    let resultsInfo = document.getElementById('searchResults');
-    if (!resultsInfo) {
-      resultsInfo = document.createElement('div');
-      resultsInfo.id = 'searchResults';
-      resultsInfo.className = 'search-results-info';
-      const domainsList = document.getElementById('workDomains');
-      if (domainsList && domainsList.parentNode) {
-        domainsList.parentNode.insertBefore(resultsInfo, domainsList);
-      }
-    }
-
-    if (visibleCount === totalCount) {
-      resultsInfo.textContent = '';
-    } else {
-      resultsInfo.textContent = `Showing ${visibleCount} of ${totalCount} domains`;
-    }
-  }
-
-  setActiveFilter(filter) {
-    const filterTabs = document.querySelectorAll('.filter-tab');
-    filterTabs.forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.filter === filter);
-    });
-
-    // Apply filter logic here if needed
-    // For now, we'll just update the UI
-    this.updateDomainsList();
   }
 }
 
