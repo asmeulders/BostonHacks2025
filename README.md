@@ -10,21 +10,21 @@ A powerful Chrome extension that helps students stay focused during study sessio
 - **Subject-Specific Approaches**: Tailored teaching for Math/Science, Literature, History, Programming, and Study Skills
 - **Session Context Tracking**: Remembers previous questions in study sessions
 - **Encouraging Feedback**: Dynamic encouraging phrases and progress recognition
-<img src='https://github.com/Codepath-Android-pod1/Final_Project/blob/master/CP-3.gif' />
+<img src='https://github.com/asmeulders/BostonHacks2025/blob/main/readmeGif/AI_Assisstant.gif' />
 
 ### ⏰ Pomodoro Timer System
 - **Work/Break Session Management**: Customizable work and break durations
 - **Persistent Timer State**: Continues running even if extension is closed
 - **Session Completion Notifications**: Visual completion pages with session summaries
 - **Background Processing**: Service worker maintains timer state
-<img src='https://github.com/Codepath-Android-pod1/Final_Project/blob/master/CP-3.gif' />
+<img src='https://github.com/asmeulders/BostonHacks2025/blob/main/readmeGif/timer.gif' />
 
 ### 🚫 Distraction Management
 - **Smart Domain Detection**: Automatically identifies work-related domains
 - **Distraction Alerts**: Warns users when visiting non-work sites during work sessions
 - **Work Domain Persistence**: Remembers designated work sites across sessions
 - **Tab Monitoring**: Real-time tracking of active tabs during study sessions
-<img src='https://github.com/Codepath-Android-pod1/Final_Project/blob/master/CP-3.gif' />
+<img src='https://github.com/asmeulders/BostonHacks2025/blob/main/readmeGif/domain_editor.gif' />
 
 ### 🛠️ Other function - Task Manager
 <img src='https://github.com/Codepath-Android-pod1/Final_Project/blob/master/CP-3.gif' />
