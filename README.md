@@ -1,6 +1,7 @@
 # 🎓 Study Focus Assistant - BostonHacks2025
 
-A powerful Chrome extension that helps students stay focused during study sessions with AI-powered assistance, distraction management, and Pomodoro timer functionality.(We created the frontend. Did not use a pre-built template out there)
+A powerful Chrome extension that helps students stay focused during study sessions with AI-powered assistance, distraction management, and Pomodoro timer functionality. 
+(We created the frontend. Did not use a pre-built template out there)
 ## ✨ Features
 
 ### 📚 Study Teacher (Professor StudyBot)
