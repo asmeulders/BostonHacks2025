@@ -27,7 +27,7 @@ A powerful Chrome extension that helps students stay focused during study sessio
 <img src='https://github.com/asmeulders/BostonHacks2025/blob/main/readmeGif/domain_editor.gif' />
 
 ### 🛠️ Other function - Task Manager
-<img src='https://github.com/Codepath-Android-pod1/Final_Project/blob/master/CP-3.gif' />
+<img src='https://github.com/asmeulders/BostonHacks2025/blob/main/readmeGif/task_manager.gif' />
 
 ### 🖥️ Retro User Interface
 - **Clean Retro Design**: Bold borders, block shadows, and high contrast colors
